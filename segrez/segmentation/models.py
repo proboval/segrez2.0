@@ -15,9 +15,16 @@ class Tags(models.Model):
     Green = models.IntegerField()
     Blue = models.IntegerField()
 
+    def __str__(self):
+        return self.Name
 
-# class Data(models.Model):
-#     """
-#     Class for storage images
-#
-#     """
+
+class segmentImage(models.Model):
+    """
+    Class for sigmentation images
+    id - image's id
+    Name - image's name
+    Image - image
+    """
+    Name = models.CharField(max_length=25)
+    Image = models.ImageField(upload_to='images/%data')

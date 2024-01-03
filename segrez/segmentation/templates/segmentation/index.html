@@ -1,0 +1,49 @@
+<!-- template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Отображение тегов с цветами</title>
+    <!-- Подключаем стили CSS (можно дополнительно стилизовать таблицу) -->
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            display: block;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Теги с цветами</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Название тега</th>
+                <th>Цвет (RGB)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Django цикл для прохождения по всем объектам Tags -->
+            {% for tag in tags %}
+                <tr>
+                    <td>{{ tag.Name }}</td> <!-- Отображение названия тега -->
+                    <td>
+                        <!-- Отображение квадратика с цветом -->
+                        <div class="color-box" style="background-color: rgb({{ tag.Red }}, {{ tag.Green }}, {{ tag.Blue }});"></div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
