@@ -23,6 +23,7 @@ class Tags(models.Model):
         verbose_name_plural = 'Теги'
         ordering = ['Red', 'Green', 'Blue']
 
+
 class segmentImage(models.Model):
     """
     Class for sigmentation images
@@ -32,3 +33,13 @@ class segmentImage(models.Model):
     """
     Name = models.CharField(max_length=25)
     Image = models.ImageField(upload_to='images/%data')
+
+
+class Point(models.Model):
+    x = models.IntegerField()
+    y = models.IntegerField()
+    inRect = models.ForeignKey('Rect', on_delete=models.CASCADE)
+
+
+class Rect(models.Model):
+    tag = models.ForeignKey('Tags', on_delete=models.RESTRICT)
