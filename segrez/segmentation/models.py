@@ -18,6 +18,10 @@ class Tags(models.Model):
     def __str__(self):
         return self.Name
 
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+        ordering = ['Red', 'Green', 'Blue']
 
 class segmentImage(models.Model):
     """

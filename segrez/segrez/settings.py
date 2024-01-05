@@ -56,7 +56,7 @@ ROOT_URLCONF = 'segrez.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'segrez', 'templates'), os.path.join(BASE_DIR, 'segmentation', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

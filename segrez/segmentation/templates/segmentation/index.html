@@ -2,24 +2,37 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link href="style.css" rel="stylesheet" type="text/css" />
     <title>Отображение тегов с цветами</title>
     <!-- Подключаем стили CSS (можно дополнительно стилизовать таблицу) -->
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
         table {
             border-collapse: collapse;
             width: 50%;
             margin: 20px auto;
+            border-radius: 10px; /* Скругление краев таблицы */
+            overflow: hidden; /* Обрезать содержимое за пределами радиуса */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Тень для таблицы */
         }
         th, td {
             border: 1px solid black;
             padding: 8px;
-            text-align: left;
+            text-align: centre;
         }
         .color-box {
             width: 20px;
             height: 20px;
-            display: block;
+            display: inline-block;
             border: 1px solid #000;
+            border-radius: 5px; /* Скругление краев таблицы */
+            overflow: hidden; /* Обрезать содержимое за пределами радиуса */
+            vertical-align: middle; /* Выравниваем по вертикали внутри ячейки */
         }
     </style>
 </head>
