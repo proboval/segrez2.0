@@ -1,0 +1,65 @@
+<!-- template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Рисование на Canvas</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <canvas id="myCanvas" width="500" height="500" style="border:1px solid #000;"></canvas>
+    <script>
+        // JavaScript для рисования на Canvas
+        const canvas = document.getElementById('myCanvas');
+        const context = canvas.getContext('2d');
+        var tempArr = new Array();
+        var matrix = new Array();
+        let isDrawing = false;
+        let k = 0;
+
+        canvas.addEventListener('mousedown', function(e) {
+            console.log('mousedown');
+            isDrawing = true;
+            drawPoint(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+        });
+
+        canvas.addEventListener('mouseup', function() {
+            isDrawing = false;
+        });
+
+
+        function drawPoint(x, y) {
+            context.fillStyle = '#000';
+            context.fillRect(x, y, 1, 1); // Рисование точки
+            tempArr.push([x, y]);
+        }
+
+        window.addEventListener('keydown', function(event) {
+            console.log('press');
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                console.log('Print Enter');
+                matrix.push(tempArr.slice());
+                drawR(matrix);
+                k += 1;
+                tempArr = [];
+            }
+        });
+
+        function drawR(matrix) {
+            context.beginPath();
+
+            for (let i = 0; i < matrix[k].length; i++) {
+                if (i === 0) {
+                    context.moveTo(matrix[k][i][0], matrix[k][i][1]);
+                }
+                else {
+                    context.lineTo(matrix[k][i][0], matrix[k][i][1]);
+                }
+            }
+
+            context.lineTo(matrix[k][0][0], matrix[k][0][1])
+
+            context.stroke();
+        }
+    </script>
+</body>
+</html>

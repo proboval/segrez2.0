@@ -10,4 +10,5 @@ def index(request):
 
 
 def test(request):
-    return HttpResponse('Test Page')
+    tags = Tags.objects.all()
+    return render(request, 'segmentation/testDraw.html', {'tags': tags, 'title': 'Test Draw'})
