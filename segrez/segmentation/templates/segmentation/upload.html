@@ -1,0 +1,17 @@
+<!-- segmentation/upload.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Images</title>
+</head>
+<body>
+    <h2>Upload Images</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <a href="{% url 'testDraw' %}">
+            <button type="button">Перейти к разметке данных</button>
+        </a>
+    </form>
+</body>
+</html>

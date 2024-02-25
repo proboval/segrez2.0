@@ -1,20 +1,51 @@
 <!-- template.html -->
 <!DOCTYPE html>
 <html>
+    <style>
+        /* Расположение по центру по вертикали и горизонтали */
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Стиль канвы */
+        #myCanvas {
+            border: 1px solid #000;
+        }
+    </style>
 <head>
     <title>Рисование на Canvas</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <canvas id="myCanvas" width="500" height="500" style="border:1px solid #000;"></canvas>
+    <canvas id="myCanvas" width="500" height="500"></canvas>
     <script>
-        // JavaScript для рисования на Canvas
         const canvas = document.getElementById('myCanvas');
-        const context = canvas.getContext('2d');
-        var tempArr = new Array();
-        var matrix = new Array();
-        let isDrawing = false;
-        let k = 0;
+            const context = canvas.getContext('2d');
+            var tempArr = new Array();
+            let isDrawing = false;
+            let k = 0;
+            let numImg = 1;
+            const totalObj = {{ images|length }}
+            let rectForImage = new Array({{images|length}})
+            let flag = 0;
+            for (let i = 0; i < rectForImage.length; i++) {
+                rectForImage[i] = new Array();
+            }
+        window.addEventListener('load', () => {
+            let img = new Image();
+
+            {% for image in images %}
+                {% if image.id == 1 %}
+                    img.src = '{{image.Image.url}}';
+                    img.onload = () => context.drawImage(img, 0, 0, 500, 500);
+                {% endif %}
+            {% endfor %}
+        });
+
 
         canvas.addEventListener('mousedown', function(e) {
             console.log('mousedown');
@@ -26,7 +57,7 @@
             isDrawing = false;
         });
 
-
+        /*отрисовка точек*/
         function drawPoint(x, y) {
             context.fillStyle = '#000';
             context.fillRect(x, y, 1, 1); // Рисование точки
@@ -35,30 +66,93 @@
 
         window.addEventListener('keydown', function(event) {
             console.log('press');
+            /*вызов отрисовки многоугольника*/
             if (event.key === 'Enter' || event.keyCode === 13) {
-                console.log('Print Enter');
-                matrix.push(tempArr.slice());
-                drawR(matrix);
+                if (tempArr.length > 2){
+                    console.log('Print Enter');
+                    rectForImage[numImg - 1].push(tempArr.slice());
+                    drawR(rectForImage[numImg - 1][k]);
+                    k += 1;
+                    tempArr = [];
+                }
+            }
+            /*следующее изображение*/
+            if (event.keyCode === 39) {
+                if (numImg < totalObj) {
+                    numImg += 1;
+                    drawImageAndPolygons(numImg);
+                }
+            }
+            /*предыдущее изображение*/
+            if (event.keyCode === 37) {
+                if (numImg > 1) {
+                    numImg -= 1;
+                    drawImageAndPolygons(numImg);
+                }
+            }
+            console.log(numImg);
+            k = 0;
+            for (let i = 0; i < rectForImage[numImg - 1].length; i++){
+                drawR(rectForImage[numImg - 1][i]);
                 k += 1;
-                tempArr = [];
             }
         });
+        /*отрисовка i-ого изображения*/
 
+
+        // Функция для отрисовки многоугольников
+        function drawPolygons() {
+            let k = 0;
+            for (let i = 0; i < rectForImage[numImg - 1].length; i++) {
+                drawR(rectForImage[numImg - 1][i]);
+                k += 1;
+            }
+        }
+
+        // Измененная функция для отрисовки изображения и многоугольников
+        function drawImageAndPolygons(numImg) {
+            $.ajax({
+                url: 'get_image_name',
+                type: 'GET',
+                data: {
+                    'numImg': numImg
+                },
+                success: function(data) {
+                    drawImage(data['image_url']);
+                }
+            });
+
+            // Функция для отрисовки только изображения
+            function drawImage(imgUrl) {
+                let img = new Image();
+                img.src = imgUrl;
+                img.onload = function() {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    context.drawImage(img, 0, 0, 500, 500);
+                    for (let i = 0; i < rectForImage[numImg - 1].length; i++) {
+                        drawR(rectForImage[numImg - 1][i]);
+                        k += 1;
+                    }
+                }
+            }
+        }
+
+
+        /*отрисовка многоугольника*/
         function drawR(matrix) {
             context.beginPath();
 
-            for (let i = 0; i < matrix[k].length; i++) {
-                if (i === 0) {
-                    context.moveTo(matrix[k][i][0], matrix[k][i][1]);
-                }
-                else {
-                    context.lineTo(matrix[k][i][0], matrix[k][i][1]);
-                }
+            context.moveTo(matrix[0][0], matrix[0][1]);
+            for (let i = 1; i < matrix.length; i++) {
+                context.lineTo(matrix[i][0], matrix[i][1]);
             }
-
-            context.lineTo(matrix[k][0][0], matrix[k][0][1])
-
+            context.lineTo(matrix[0][0], matrix[0][1]);
             context.stroke();
+        }
+
+        /*очистка канвы*/
+        function clearCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
         }
     </script>
 </body>

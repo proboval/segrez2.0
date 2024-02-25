@@ -32,7 +32,10 @@ class segmentImage(models.Model):
     Image - image
     """
     Name = models.CharField(max_length=25)
-    Image = models.ImageField(upload_to='images/%data')
+    Image = models.ImageField(upload_to='images/')
+
+    def __str__(self):
+        return self.Name
 
 
 class Point(models.Model):
@@ -40,6 +43,10 @@ class Point(models.Model):
     y = models.IntegerField()
     inRect = models.ForeignKey('Rect', on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'({self.x}, {self.y})'
+
 
 class Rect(models.Model):
     tag = models.ForeignKey('Tags', on_delete=models.RESTRICT)
+    inImage = models.ForeignKey('segmentImage', on_delete=models.CASCADE, null=True)
