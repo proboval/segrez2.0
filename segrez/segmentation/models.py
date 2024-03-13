@@ -39,9 +39,9 @@ class segmentImage(models.Model):
 
 
 class Point(models.Model):
-    x = models.IntegerField()
-    y = models.IntegerField()
-    inRect = models.ForeignKey('Rect', on_delete=models.CASCADE)
+    x = models.FloatField()
+    y = models.FloatField()
+    inRect = models.ForeignKey('Rect', on_delete=models.CASCADE, related_name='points')
 
     def __str__(self):
         return f'({self.x}, {self.y})'
@@ -49,4 +49,4 @@ class Point(models.Model):
 
 class Rect(models.Model):
     tag = models.ForeignKey('Tags', on_delete=models.RESTRICT)
-    inImage = models.ForeignKey('segmentImage', on_delete=models.CASCADE, null=True)
+    inImage = models.ForeignKey('segmentImage', on_delete=models.CASCADE, null=True, related_name='rects')
