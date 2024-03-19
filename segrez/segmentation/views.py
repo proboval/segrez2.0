@@ -1,11 +1,11 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from django.urls import reverse
 from django.views.generic.edit import FormView
 from .forms import FileFieldForm
 from .models import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 import json
 
 
@@ -82,6 +82,48 @@ def save_data(request):
         return JsonResponse({'error': 'Метод запроса должен быть POST'})
 
 
+@csrf_exempt
+def save_polygon(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        polygon = data.get('polygon')
+        numPolygon = data.get('numPolygon')
+        numImg = data.get('numImg')
+        tag = data.get('tag')
+
+        idTag = Tags.objects.get(Name=tag)
+        image = segmentImage.objects.get(pk=numImg)
+
+        newPol = Rect(tag=idTag, inImage=image, idInImage=numPolygon)
+        newPol.save()
+
+        for i in range(len(polygon)):
+            newPoint = Point(x=polygon[i][0], y=polygon[i][1], inRect=newPol)
+            newPoint.save()
+
+        return JsonResponse({'message': 'Данные успешно сохранены'})
+    else:
+        return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
+@csrf_exempt
+def del_polygon(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        numPolygon = data.get('numPolygon')
+        numImg = data.get('numImg')
+
+        with transaction.atomic():
+            image = segmentImage.objects.get(pk=numImg)
+            rect = Rect.objects.filter(inImage=image, idInImage=numPolygon).delete()
+
+            Rect.objects.filter(inImage=image, idInImage__gt=numPolygon).update(idInImage=models.F('idInImage') - 1)
+
+        return JsonResponse({'message': 'Данные успешно сохранены'})
+    else:
+        return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
 class FileFieldFormView(FormView):
     form_class = FileFieldForm
     template_name = "segmentation/upload.html"
@@ -97,12 +139,20 @@ class FileFieldFormView(FormView):
 
     def form_valid(self, form):
         files = form.cleaned_data["file_field"]
+        imgs = segmentImage.objects.all()
+        k = len(imgs) + 1
 
         for uploaded_file in files:
-            segment_image = segmentImage(Image=uploaded_file, Name=uploaded_file.name)
+            segment_image = segmentImage(pk=k, Image=uploaded_file, Name=uploaded_file.name)
             segment_image.save()
+            k += 1
 
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tags'] = Tags.objects.all()
+        return context
+
     def get_success_url(self):
-        return reverse('test')
+        return reverse('testDraw')

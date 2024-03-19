@@ -1,17 +1,140 @@
-<!-- segmentation/upload.html -->
 <!DOCTYPE html>
+{% load custom_filters %}
 <html>
 <head>
     <title>Upload Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .upload-form {
+            width: 45%;
+        }
+        .tags {
+            width: 45%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .tags h3 {
+            margin-top: 0;
+        }
+        .tag {
+            display: block;
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+        .tag:hover {
+            background-color: #e0e0e0;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+
+        .button-container button {
+            background-color: #3e9eff; /* Голубой цвет */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .button-container button:hover {
+            background-color: #6ab7ff; /* Светлоголубой цвет при наведении */
+        }
+
+        .upload-form input {
+            background-color: #3e9eff; /* Цвет фона кнопки */
+            color: white; /* Цвет текста кнопки */
+            border: none; /* Убираем границу */
+            padding: 10px 20px; /* Отступы внутри кнопки */
+            border-radius: 5px; /* Закругляем углы кнопки */
+            cursor: pointer; /* Задаем указатель при наведении */
+        }
+
+        .upload-form input:hover {
+            background-color: #6ab7ff; /* Измененный цвет фона при наведении */
+        }
+
+        .upload-form label {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Upload Images</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <a href="{% url 'testDraw' %}">
-            <button type="button">Перейти к разметке данных</button>
-        </a>
-    </form>
+    <h2>Загрузка изображений</h2>
+    <div class="container">
+        <div class="upload-form">
+            <form method="post" enctype="multipart/form-data" class="form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="button-container" style="margin-bottom: 15px;">
+                    <button type="submit">Загрузить изображения</button>
+                </div>
+                <a href="{% url 'testDraw' %}" class="button-container">
+                    <button>Перейти к разметке данных</button>
+                </a>
+            </form>
+        </div>
+        <div class="tags" style="display: flex; flex-direction: column;">
+            <h3>Теги</h3>
+            {% for tag in tags %}
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <label style="margin-right: 10px;" for="{{ tag.Name }}">{{ tag.Name }}</label>
+                    <input type="color" id="{{ tag.Name }}" value="#{{ tag.Red|to_hex }}{{ tag.Green|to_hex }}{{ tag.Blue|to_hex }}">
+                </div>
+            {% endfor %}
+            <div class="add-tag-form">
+                <h3>Добавить тег</h3>
+                <form id="addTagForm">
+                    <input type="text" id="tagName" placeholder="Название тега" style="margin-bottom: 10px;">
+                    <input type="color" id="tagColor" value="#000000" style="margin-bottom: 10px;">
+                    <button type="button" onclick="addTag()">Добавить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        function saveTags() {
+            // Получаем цвета тегов и отправляем на сервер
+            var tagsColors = {};
+            var inputs = document.querySelectorAll('.tags input[type="color"]');
+            inputs.forEach(function(input) {
+                tagsColors[input.id] = input.value;
+            });
+
+            fetch('/save_tags/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Добавляем CSRF-токен для защиты от CSRF-атак
+                },
+                body: JSON.stringify(tagsColors)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Теги успешно сохранены в базу данных');
+                    // Можно добавить дополнительные действия после успешного сохранения
+                } else {
+                    console.error(tagsColors);
+                }
+            })
+            .catch(error => {
+                console.error(tagsColors);
+            });
+        }
+    </script>
 </body>
 </html>

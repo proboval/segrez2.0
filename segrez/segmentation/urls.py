@@ -7,5 +7,7 @@ urlpatterns = [
     path('upload/', FileFieldFormView.as_view(), name='upload_images'),
     path('test/get_image_name/', get_image_name, name='get_image_name'),
     path('test/get_tag/', get_tag, name='get_tag'),
-    path('test/save_data/', save_data, name='save_data')
+    path('test/save_data/', save_data, name='save_data'),
+    path('test/save_polygon/', save_polygon, name='save_polygon'),
+    path('test/del_polygon/', del_polygon, name='del_polygon')
 ]

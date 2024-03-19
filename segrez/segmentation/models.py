@@ -50,3 +50,4 @@ class Point(models.Model):
 class Rect(models.Model):
     tag = models.ForeignKey('Tags', on_delete=models.RESTRICT)
     inImage = models.ForeignKey('segmentImage', on_delete=models.CASCADE, null=True, related_name='rects')
+    idInImage = models.IntegerField()
