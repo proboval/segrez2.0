@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 {% load custom_filters %}
 <html>
 <head>
@@ -69,6 +70,31 @@
             margin-top: 10px;
         }
     </style>
+
+    <style>
+        table {
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+    input[type="text"], input[type="color"] {
+        width: calc(100% - 16px); /* Вычтите padding и border из ширины */
+        padding: 0px;
+        border: none; /* Убираем рамку у input[type="color"] */
+    }
+
+    input[type="text"] {
+        text-align: center; /* Выравниваем текст по центру */
+    }
+    </style>
+
 </head>
 <body>
     <h2>Загрузка изображений</h2>
@@ -86,55 +112,47 @@
             </form>
         </div>
         <div class="tags" style="display: flex; flex-direction: column;">
-            <h3>Теги</h3>
-            {% for tag in tags %}
-                <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                    <label style="margin-right: 10px;" for="{{ tag.Name }}">{{ tag.Name }}</label>
-                    <input type="color" id="{{ tag.Name }}" value="#{{ tag.Red|to_hex }}{{ tag.Green|to_hex }}{{ tag.Blue|to_hex }}">
-                </div>
-            {% endfor %}
+            <h3 style="text-align: center;">Теги</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%; text-align: center;">Название</th>
+                        <th style="width: 40%; text-align: center;">Цвет</th>
+                        <th style="width: 20%; text-align: center;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelTagBody">
+                    {% for tag in tags %}
+                        <tr id="Tag{{ tag.pk }}">
+                            <td style="text-align: center;">
+                                <input type="text" id="Tag{{ tag.pk }}Name" value="{{ tag.Name }}">
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="color" id="Tag{{ tag.pk }}Color" value="#{{ tag.Red|to_hex }}{{ tag.Green|to_hex }}{{ tag.Blue|to_hex }}">
+                            </td>
+                            <td style="text-align: center;">
+                                <div>
+                                    <span style="cursor: pointer; margin-right: 5px; color: red;" onclick="deleteTag({{ tag.pk }})">❌</span>
+                                    <span style="cursor: pointer; color: green;" onclick="saveChangeTagDB({{ tag.pk }})">✔️</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             <div class="add-tag-form">
-                <h3>Добавить тег</h3>
+                <h3 style="margin-bottom: 10px">Добавить тег</h3>
                 <form id="addTagForm">
                     <input type="text" id="tagName" placeholder="Название тега" style="margin-bottom: 10px;">
                     <input type="color" id="tagColor" value="#000000" style="margin-bottom: 10px;">
-                    <button type="button" onclick="addTag()">Добавить</button>
+                    <div class="button-container" style="margin-bottom: 10px;">
+                        <button type="button" onclick="saveNewTag()">Добавить</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-
-
-
-    <script>
-        function saveTags() {
-            // Получаем цвета тегов и отправляем на сервер
-            var tagsColors = {};
-            var inputs = document.querySelectorAll('.tags input[type="color"]');
-            inputs.forEach(function(input) {
-                tagsColors[input.id] = input.value;
-            });
-
-            fetch('/save_tags/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}' // Добавляем CSRF-токен для защиты от CSRF-атак
-                },
-                body: JSON.stringify(tagsColors)
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log('Теги успешно сохранены в базу данных');
-                    // Можно добавить дополнительные действия после успешного сохранения
-                } else {
-                    console.error(tagsColors);
-                }
-            })
-            .catch(error => {
-                console.error(tagsColors);
-            });
-        }
-    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{% static 'tagcstom.js' %}"></script>
 </body>
 </html>

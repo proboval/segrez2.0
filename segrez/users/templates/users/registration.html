@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form method="post">
+        {% csrf_token %}
+        <div class="tab-content">
+            <div id="company" class="tab-pane active">
+                {{ company_form.as_p }}
+            </div>
+            <div id="expert" class="tab-pane">
+                {{ expert_form.as_p }}
+            </div>
+        </div>
+        <button type="submit">Register</button>
+    </form>
+</body>
+</html>

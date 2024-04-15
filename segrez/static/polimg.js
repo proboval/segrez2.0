@@ -288,30 +288,4 @@ function saveRectToDB() {
 }
 
 
-function saveToDB() {
-    let data = {
-        "polygons": rectForImage.slice(),
-        "PolsColor": colorPolArr.slice()
-    };
-
-    fetch('/segmentation/test/save_data/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        if (response.ok) {
-            console.log('Данные успешно сохранены в базу данных');
-        } else {
-            console.error('Ошибка при сохранении данных в базу данных');
-        }
-    })
-    .catch(error => {
-        console.error('Произошла ошибка:', error);
-    });
-}
-
-
 tagsCont.addEventListener("change", changeOption);

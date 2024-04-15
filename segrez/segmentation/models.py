@@ -1,4 +1,25 @@
 from django.db import models
+from users.models import Company
+
+
+class Project(models.Model):
+    """
+    Class for save img for company
+    id - project's id
+    CompanyId - company's id
+    Name - project's name
+    """
+    Name = models.CharField(
+        max_length=25
+    )
+    company = models.ForeignKey(
+        'users.Company',
+        on_delete=models.CASCADE,
+        related_name='projects'
+    )
+
+    def __str__(self):
+        return f'{self.Name} ({self.company.companyName})'
 
 
 class Tags(models.Model):
@@ -10,10 +31,17 @@ class Tags(models.Model):
     Green - count green in RGB
     Blue - count blue in RGB
     """
-    Name = models.CharField(max_length=25)
+    Name = models.CharField(
+        max_length=25
+    )
     Red = models.IntegerField()
     Green = models.IntegerField()
     Blue = models.IntegerField()
+    project = models.ForeignKey(
+        'Project',
+        on_delete=models.CASCADE,
+        related_name='tags'
+    )
 
     def __str__(self):
         return self.Name
@@ -30,24 +58,44 @@ class segmentImage(models.Model):
     id - image's id
     Name - image's name
     Image - image
+    ProjectId - project's id
     """
-    Name = models.CharField(max_length=25)
-    Image = models.ImageField(upload_to='images/')
+    Name = models.CharField(
+        max_length=25
+    )
+    Image = models.ImageField(
+        upload_to='images/'
+    )
+    project = models.ForeignKey(
+        'Project',
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
 
     def __str__(self):
         return self.Name
 
 
+class Rect(models.Model):
+    tag = models.ForeignKey('Tags',
+                            on_delete=models.CASCADE
+                            )
+    inImage = models.ForeignKey('segmentImage',
+                                on_delete=models.CASCADE,
+                                null=True,
+                                related_name='rects'
+                                )
+    idInImage = models.IntegerField()
+
+
 class Point(models.Model):
     x = models.FloatField()
     y = models.FloatField()
-    inRect = models.ForeignKey('Rect', on_delete=models.CASCADE, related_name='points')
+    inRect = models.ForeignKey(
+        'Rect',
+        on_delete=models.CASCADE,
+        related_name='points'
+    )
 
     def __str__(self):
         return f'({self.x}, {self.y})'
-
-
-class Rect(models.Model):
-    tag = models.ForeignKey('Tags', on_delete=models.RESTRICT)
-    inImage = models.ForeignKey('segmentImage', on_delete=models.CASCADE, null=True, related_name='rects')
-    idInImage = models.IntegerField()

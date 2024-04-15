@@ -49,9 +49,9 @@ def get_image_name(request):
 
 
 def get_tag(request):
-    optionName = request.GET.get('optionName')
+    name = request.GET.get('name')
 
-    tag = Tags.objects.get(Name=optionName)
+    tag = Tags.objects.get(Name=name)
 
     if tag:
         return JsonResponse({'Name': tag.Name, 'Red': tag.Red, 'Green': tag.Green, 'Blue': tag.Blue, 'ID': tag.pk})
@@ -107,6 +107,27 @@ def save_polygon(request):
 
 
 @csrf_exempt
+def save_new_tag(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        newName = data.get('name')
+        newColor = data.get('color')
+
+        c = color(newColor)
+
+        with transaction.atomic():
+            tag = Tags(Name=newName, Red=c.red, Green=c.green, Blue=c.blue)
+            tag.save()
+
+        pk_tag = tag.pk
+
+        return JsonResponse({'message': 'Данные успешно сохранены', 'id': pk_tag,
+                             'name': newName, 'color': newColor})
+    else:
+        return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
+@csrf_exempt
 def del_polygon(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -122,6 +143,57 @@ def del_polygon(request):
         return JsonResponse({'message': 'Данные успешно сохранены'})
     else:
         return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
+@csrf_exempt
+def delete_tag(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        idTag = data.get('id')
+
+        with transaction.atomic():
+            tag = Tags.objects.get(pk=idTag).delete()
+
+        return JsonResponse({'message': 'Данные успешно сохранены'})
+    else:
+        return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
+@csrf_exempt
+def change_tag(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        idTag = data.get('id')
+        newName = data.get('newName')
+        newColor = data.get('newColor')
+        newColor = newColor.replace('#', '')
+
+        c = color(newColor)
+
+        with transaction.atomic():
+            tag = Tags.objects.get(pk=idTag)
+            tag.Name = newName
+            tag.Red = c.red
+            tag.Green = c.green
+            tag.Blue = c.blue
+
+            tag.save()
+
+        return JsonResponse({'message': 'Данные успешно сохранены'})
+    else:
+        return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
+class color:
+    red = int()
+    green = int()
+    blue = int()
+
+    def __init__(self, hexColor):
+        hexColor = hexColor.replace('#', '')
+        self.red = int(hexColor[:2], 16)
+        self.green = int(hexColor[2:4], 16)
+        self.blue = int(hexColor[4:], 16)
 
 
 class FileFieldFormView(FormView):
