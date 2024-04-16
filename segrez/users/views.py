@@ -1,19 +1,28 @@
-from django.shortcuts import render
-
 from django.shortcuts import render, redirect
-from .forms import RegistrationForm
-from .models import Company, Expert
+from .forms import RegistrationExpertForm, RegistrationCompanyForm
+from django.contrib import messages
 
 
 def registration_view(request):
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            role = form.cleaned_data['role']
-            if role == 'company':
-                print("Create new company")
-            elif role == 'expert':
-                print("Create new ")
+        expert_form = RegistrationExpertForm(request.POST)
+        company_form = RegistrationCompanyForm(request.POST)
+        print(expert_form)
+        if expert_form.is_valid():
+            expert_form.save()
+            messages.success(request, 'Вы успешно зарегистрировались как эксперт!')
+            return render(request, 'users/registration.html',
+                          {'expert_form': RegistrationExpertForm(), 'company_form': RegistrationCompanyForm()})
+        elif company_form.is_valid():
+            company_form.save()
+            messages.success(request, 'Вы успешно зарегистрировались как компания!')
+            return render(request, 'users/registration.html',
+                          {'expert_form': RegistrationExpertForm(), 'company_form': RegistrationCompanyForm()})
+        else:
+            return render(request, 'users/registration.html',
+                          {'expert_form': RegistrationExpertForm(), 'company_form': RegistrationCompanyForm()})
     else:
-        form = RegistrationForm()
-    return render(request, 'users/registration.html', {'form': form})
+        expert_form = RegistrationExpertForm()
+        company_form = RegistrationCompanyForm()
+        print('24 строка')
+        return render(request, 'users/registration.html', {'expert_form': expert_form, 'company_form': company_form})

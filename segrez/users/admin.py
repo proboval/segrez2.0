@@ -3,15 +3,15 @@ from .models import *
 
 
 class ExpertAdmin(admin.ModelAdmin):
-    list_display = ('id', 'Name', 'lastName')
-    list_display_links = ('id', 'Name', 'lastName')
-    search_fields = ('id', 'Name', 'lastName')
+    list_display = ('id', 'first_name', 'last_name')
+    list_display_links = ('id', 'first_name', 'last_name')
+    search_fields = ('id', 'first_name', 'last_name')
 
 
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'companyName')
-    list_display_links = ('id', 'companyName')
-    search_fields = ('id', 'companyName')
+    list_display = ('id', 'name')
+    list_display_links = ('id', 'name')
+    search_fields = ('id', 'name')
 
 
 admin.site.register(Expert, ExpertAdmin)

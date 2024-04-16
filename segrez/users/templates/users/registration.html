@@ -1,21 +1,137 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Регистрация</title>
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8f9fa;
+        }
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: 750px;
+        }
+
+        .tab > input[type="radio"] {
+            display: none;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        #tab-btn-1:checked~#expert,
+        #tab-btn-2:checked~#company {
+            display: block;
+        }
+
+        .tab > label {
+            display: block;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out;
+            text-decoration: none;
+            color: #0d6efd;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+            width: 90%;
+            text-align: center; /* Центрирование текста */
+            font-size: 14px; /* Уменьшение размера текста */
+        }
+
+        .tab > input[type="radio"]:checked + label {
+            cursor: default;
+            color: #fff;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #0d6efd;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        h3 {
+            font-family: Arial, sans-serif; /* Изменение шрифта заголовка */
+        }
+
+        label {
+            font-family: Arial, sans-serif; /* Изменение шрифта меток */
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <form method="post">
-        {% csrf_token %}
-        <div class="tab-content">
-            <div id="company" class="tab-pane active">
-                {{ company_form.as_p }}
-            </div>
-            <div id="expert" class="tab-pane">
+{% block content %}
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="tab">
+        <h3>Регистрация</h3> <!-- Добавлен заголовок 3 уровня -->
+        <input checked id="tab-btn-1" name="tab-btn" type="radio" value="company">
+        <label for="tab-btn-1">Эксперт</label>
+        <input id="tab-btn-2" name="tab-btn" type="radio" value="expert">
+        <label for="tab-btn-2">Компания</label>
+
+        <div class="tab-content" id="expert">
+            <form method="post">
+                {% csrf_token %}
                 {{ expert_form.as_p }}
-            </div>
+                <button type="submit">Зарегистрироваться как Эксперт</button>
+            </form>
         </div>
-        <button type="submit">Register</button>
-    </form>
+        <div class="tab-content" id="company">
+            <form method="post">
+                {% csrf_token %}
+                {{ company_form.as_p }}
+                <button type="submit">Зарегистрироваться как Компания</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
 </body>
 </html>
