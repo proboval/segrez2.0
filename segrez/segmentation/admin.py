@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import *
 
 
+# это всё убрать из админки
 class TagsAdmin(admin.ModelAdmin):
     list_display = ('id', 'Name')
     list_display_links = ('id', 'Name')

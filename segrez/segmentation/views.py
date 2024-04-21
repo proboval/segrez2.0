@@ -7,11 +7,26 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
+from users.models import *
 
 
 def index(request):
     tags = Tags.objects.all()
     return render(request, 'segmentation/index.html', {'tags': tags, 'title': 'Список тегов'})
+
+
+def project_show(request):
+    try:
+        company = request.user.company
+        user_type = 'Эксперт'
+    except AttributeError:
+        user_type = 'Компания'
+        company = request.user
+
+    projects = Project.objects.filter(company=company)
+    context = {'user': request.user, 'projects': projects, 'user_type': user_type}
+
+    return render(request, 'segmentation/projects.html', context=context)
 
 
 def test(request):

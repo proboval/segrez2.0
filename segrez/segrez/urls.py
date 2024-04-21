@@ -21,6 +21,7 @@ from django.urls import path, include
 from .views import *
 from schema_graph.views import Schema
 
+app_name = 'segrez'
 
 urlpatterns = [
     path('admin/', admin.site.urls),

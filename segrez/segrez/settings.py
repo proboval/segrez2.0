@@ -151,3 +151,10 @@ GRAPH_MODELS = {
     'all_applications': True,
     'group_models': True
 }
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.CustomAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+LOGIN_URL = 'users/login/'

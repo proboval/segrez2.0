@@ -1,7 +1,7 @@
-<!-- home.html -->
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>SegRez - приветственная страница</title>
     <style>
         body {
@@ -30,6 +30,7 @@
             color: #fff; /* Цвет текста */
             cursor: pointer;
             transition: background-color 0.3s ease; /* Плавное изменение цвета фона */
+            margin: 10px; /* Добавляем небольшой отступ между кнопками */
         }
         button:hover {
             cursor: pointer;
@@ -39,8 +40,11 @@
 <body>
     <div>
         <h1>Добро пожаловать в SegRez!</h1>
-        <a href="{% url 'upload_images' %}">
-            <button type="button">Перейти к разметке данных</button>
+        <a href="{% url 'users:registration' %}">
+            <button type="button">Регистрация</button>
+        </a>
+        <a href="{% url 'users:login' %}">
+            <button type="button">Вход</button>
         </a>
     </div>
 </body>

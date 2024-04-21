@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Проекты {{ user }}</title>
+    <style>
+        .project-box {
+            width: 200px;
+            height: 100px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+    <style>
+        .company-block {
+            width: 200px;
+            height: 200px;
+            background-color: lightblue;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .company-block:hover .plus {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .plus {
+            font-size: 48px;
+        }
+    </style>
+</head>
+<body>
+    {% if user_type == "Эксперт" %}
+        <h2>Эксперт {{ user }}</h2>
+    {% else  %}
+        <div class="company-block">
+            <div class="plus" onclick="handleClick()">+</div>
+        </div>
+        <script>
+        function handleClick() {
+            // Действие при клике на плюс
+            alert("Вы кликнули на плюс!");
+        }
+        </script>
+    {% endif %}
+
+    {% for project in projects %}
+        <div class="project-box">
+            <h2>{{ project.Name }}</h2>
+            <p>Количество изображений: {{ project.images.count }}</p>
+            <p>Количество тегов: {{ project.tags.count }}</p>
+        </div>
+    {% endfor %}
+
+
+</body>
+</html>
