@@ -4,19 +4,48 @@
     <meta charset="UTF-8">
     <title>Проекты {{ user }}</title>
     <style>
+        /* Стили для контейнера проектов */
+        .projects-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+
+        /* Стили для блока проекта */
         .project-box {
-            width: 200px;
-            height: 100px;
+            width: 30%; /* Ширина блока проекта */
+            height: 200px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
             border-radius: 10px;
             padding: 10px;
             margin-bottom: 20px;
+            font-family: Arial, sans-serif; /* Шрифт */
+            text-align: center; /* Выравнивание текста по центру */
+            transition: transform 0.2s; /* Анимация при наведении */
+            cursor: pointer;
         }
-    </style>
-    <style>
+
+        /* Стили для названия проекта */
+        .project-name {
+            font-size: 20px; /* Размер шрифта названия проекта */
+            margin-bottom: 5px;
+            font-weight: bold; /* Жирный шрифт */
+        }
+
+        /* Стили для информации о проекте */
+        .project-info {
+            font-size: 14px; /* Размер шрифта информации о проекте */
+        }
+
+        /* Стили при наведении на блок проекта */
+        .project-box:hover {
+            transform: scale(1.05); /* Немного увеличиваем размер блока */
+        }
+
+        /* Стили для блока компании */
         .company-block {
-            width: 200px;
+            width: 30%; /* Ширина блока компании */
             height: 200px;
             background-color: lightblue;
             border-radius: 10px;
@@ -24,17 +53,39 @@
             justify-content: center;
             align-items: center;
             position: relative;
-        }
-        .company-block:hover .plus {
-            transform: scale(1.2);
+            margin-bottom: 20px;
+            transition: transform 0.2s; /* Анимация при наведении */
             cursor: pointer;
         }
+
+        /* Стили для красной кнопки */
+        .logout-button {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 10px; /* Увеличиваем радиус скругления */
+            padding: 10px 20px; /* Увеличиваем отступы */
+            font-size: 16px; /* Увеличиваем размер шрифта */
+            cursor: pointer;
+            margin-bottom: 20px; /* Добавляем отступ снизу */
+        }
+
+        .logout-button:hover {
+            background-color: darkred;
+        }
+
+        .company-block:hover {
+            transform: scale(1.05); /* Немного увеличиваем размер блока */
+        }
+
         .plus {
             font-size: 48px;
         }
     </style>
 </head>
 <body>
+    {% csrf_token %}
+    <button class="logout-button" onclick="logout()">Выход</button>
     {% if user_type == "Эксперт" %}
         {% if user.company == None %}
             <h3>Ваша учётная запись не состоит ни в какой компании</h3>
@@ -42,27 +93,39 @@
         {% if projects.count == 0 %}
             <h3>У вас пока что нет проектов</h3>
         {% endif %}
-    {% else  %}
-        <div class="company-block">
-            <div class="plus" onclick="handleClick()">+</div>
-        </div>
-        <script>
-        function handleClick() {
-            var url = "/segmentation/upload/";
-
-            window.location.href = url;
-        }
-        </script>
     {% endif %}
 
-    {% for project in projects %}
-        <div class="project-box">
-            <h2>{{ project.Name }}</h2>
-            <p>Количество изображений: {{ project.images.count }}</p>
-            <p>Количество тегов: {{ project.tags.count }}</p>
-        </div>
-    {% endfor %}
+    <div class="projects-container">
+        {% for project in projects %}
+            <div class="project-box" onclick="openProject('{{ project.id }}')">
+                <div class="project-name">{{ project.Name }}</div>
+                <div class="project-info">Количество изображений: {{ project.images.count }}</div>
+                <div class="project-info">Количество тегов: {{ project.tags.count }}</div>
+            </div>
+        {% endfor %}
+        {% if user_type == "Компания" %}
+            <div class="company-block" onclick="handleClick()">
+                <div class="plus">+</div>
+            </div>
+            <script>
+            function handleClick() {
+                var url = "/segmentation/upload/";
+                window.location.href = url;
+            }
+            </script>
+        {% endif %}
+    </div>
 
-
+    {% csrf_token %}
+    <script>
+    function openProject(projectId) {
+        var url = "/segmentation/projects/" + projectId + "/";
+        window.location.href = url;
+    }
+    function logout() {
+        var url = "{% url 'users:logout_user' %}";
+        window.location.href = url;
+    }
+    </script>
 </body>
 </html>

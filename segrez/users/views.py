@@ -6,6 +6,12 @@ from .models import *
 from django.contrib.auth.decorators import user_passes_test
 from django.urls import reverse
 from django.contrib import admin
+from django.contrib.auth import logout
+
+
+def logout_user(request):
+    logout(request)
+    return redirect(reverse('users:login'))
 
 
 def login_view(request):

@@ -71,6 +71,23 @@
             font-size: 16px;
         }
 
+        .toReg {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #0d6efd;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toReg:hover {
+            background-color: #0056b3;
+        }
+
         button[type="submit"] {
             width: 100%;
             padding: 10px;
@@ -87,6 +104,8 @@
         button[type="submit"]:hover {
             background-color: #0056b3;
         }
+
+
 
         h3 {
             font-family: Arial, sans-serif; /* Изменение шрифта заголовка */
@@ -125,7 +144,14 @@
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit">Войти</button>
+            <button class="toReg" onclick="toRegistr()">Зарегистрироваться</button>
         </form>
+        <script>
+            function toRegistr() {
+                var url = "{% url 'users:registration' %}";
+                window.location.href = url;
+            }
+        </script>
 
     </div>
 
