@@ -36,15 +36,21 @@
 </head>
 <body>
     {% if user_type == "Эксперт" %}
-        <h2>Эксперт {{ user }}</h2>
+        {% if user.company == None %}
+            <h3>Ваша учётная запись не состоит ни в какой компании</h3>
+        {% endif %}
+        {% if projects.count == 0 %}
+            <h3>У вас пока что нет проектов</h3>
+        {% endif %}
     {% else  %}
         <div class="company-block">
             <div class="plus" onclick="handleClick()">+</div>
         </div>
         <script>
         function handleClick() {
-            // Действие при клике на плюс
-            alert("Вы кликнули на плюс!");
+            var url = "/segmentation/upload/";
+
+            window.location.href = url;
         }
         </script>
     {% endif %}

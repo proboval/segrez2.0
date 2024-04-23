@@ -61,7 +61,7 @@ class segmentImage(models.Model):
     ProjectId - project's id
     """
     Name = models.CharField(
-        max_length=25
+        max_length=100
     )
     Image = models.ImageField(
         upload_to='images/'

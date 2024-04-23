@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic.edit import FormView
 from .forms import FileFieldForm
@@ -14,7 +14,7 @@ def index(request):
     tags = Tags.objects.all()
     return render(request, 'segmentation/index.html', {'tags': tags, 'title': 'Список тегов'})
 
-
+@csrf_exempt
 def project_show(request):
     try:
         company = request.user.company
@@ -211,35 +211,30 @@ class color:
         self.blue = int(hexColor[4:], 16)
 
 
-class FileFieldFormView(FormView):
-    form_class = FileFieldForm
-    template_name = "segmentation/upload.html"
-    success_url = "segmentation/testDraw.html"
+def upload_show(request):
+    return render(request, 'segmentation/upload.html')
 
-    def post(self, request, *args, **kwargs):
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+@csrf_exempt
+def upload_project(request):
+    if request.method == 'POST':
+        images = request.FILES.getlist('images')
+        name_project = request.POST.get('nameProject')
 
-    def form_valid(self, form):
-        files = form.cleaned_data["file_field"]
-        imgs = segmentImage.objects.all()
-        k = len(imgs) + 1
+        tags = request.POST.get('tags')
+        tags = json.loads(tags)
 
-        for uploaded_file in files:
-            segment_image = segmentImage(pk=k, Image=uploaded_file, Name=uploaded_file.name)
-            segment_image.save()
-            k += 1
+        newProject = Project(Name=name_project, company=request.user)
+        newProject.save()
 
-        return super().form_valid(form)
+        for image in images:
+            newImage = segmentImage(Name=image.name, Image=image, project=newProject)
+            newImage.save()
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['tags'] = Tags.objects.all()
-        return context
+        for tag in tags:
+            _color = color(tag['color'])
+            newTag = Tags(Name=tag['name'], Red=_color.red, Green=_color.green, Blue=_color.blue, project=newProject)
+            newTag.save()
 
-    def get_success_url(self):
-        return reverse('testDraw')
+    print(reverse('segmentation:project_show'))
+    return redirect(reverse('segmentation:project_show'))
+
