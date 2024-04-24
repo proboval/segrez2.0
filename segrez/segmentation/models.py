@@ -19,7 +19,7 @@ class Project(models.Model):
     )
 
     def __str__(self):
-        return f'{self.Name} ({self.company.companyName})'
+        return f'{self.Name} ({self.company.name})'
 
 
 class Tags(models.Model):

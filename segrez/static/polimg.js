@@ -1,14 +1,16 @@
 const canvas = document.getElementById('myCanvas');
 var abc = 1;
+var projectId = 0;
 const context = canvas.getContext('2d');
 var tempTag = "";
 var tempArr = [];
 let isDrawing = false;
 let k = 0;
-let numImg = 1;
+let numImg = 0;
 const totalObj = n;
-let rectForImage = new Array(n)
+let rectForImage = new Array(n);
 var colorPolArr = new Array(n);
+var imagesArr = new Array(n);
 let flag = 0;
 
 const tagsCont = document.getElementById("tagsSelect");
@@ -50,18 +52,18 @@ window.addEventListener('keydown', function(event) {
         if (tempArr.length > 2){
             console.log('Print Enter');
             saveRectToDB();
-            rectForImage[numImg - 1].push(tempArr.slice());
-            drawR(rectForImage[numImg - 1][k]);
-            fillR(rectForImage[numImg - 1][k]);
+            rectForImage[numImg].push(tempArr.slice());
+            drawR(rectForImage[numImg][k]);
+            fillR(rectForImage[numImg][k]);
             k += 1;
             tempArr = [];
-            colorPolArr[numImg - 1].push(tempTag);
+            colorPolArr[numImg].push(tempTag);
             addTableRow(k, tempTag, context.strokeStyle);
         }
     }
     /*следующее изображение*/
     if (event.keyCode === 39) {
-        if (numImg < totalObj) {
+        if (numImg + 1 < totalObj) {
             numImg += 1;
             drawImageAndPolygons(numImg);
             refreshTable();
@@ -71,7 +73,7 @@ window.addEventListener('keydown', function(event) {
     }
     /*предыдущее изображение*/
     if (event.keyCode === 37) {
-        if (numImg > 1) {
+        if (numImg + 1 > 1) {
             numImg -= 1;
             drawImageAndPolygons(numImg);
             refreshTable();
@@ -85,9 +87,9 @@ window.addEventListener('keydown', function(event) {
 // Функция для отрисовки многоугольников
 function drawPolygons() {
     k = 0;
-    for (let i = 0; i < rectForImage[numImg - 1].length; i++) {
-        context.strokeStyle = `rgb(${dictTags[colorPolArr[numImg - 1][i]][0]}, ${dictTags[colorPolArr[numImg - 1][i]][1]}, ${dictTags[colorPolArr[numImg - 1][i]][2]})`;
-        drawR(rectForImage[numImg - 1][i]);
+    for (let i = 0; i < rectForImage[numImg].length; i++) {
+        context.strokeStyle = `rgb(${dictTags[colorPolArr[numImg][i]][0]}, ${dictTags[colorPolArr[numImg][i]][1]}, ${dictTags[colorPolArr[numImg][i]][2]})`;
+        drawR(rectForImage[numImg][i]);
         k += 1;
     }
      changeOption();
@@ -95,34 +97,20 @@ function drawPolygons() {
 
 // Измененная функция для отрисовки изображения и многоугольников
 function drawImageAndPolygons(numImg) {
-    $.ajax({
-        url: 'get_image_name',
-        type: 'GET',
-        data: {
-            'numImg': numImg
-        },
-        success: function(data) {
-            k = 0;
-            drawImage(data['image_url']);
-        }
-    });
-
-    // Функция для отрисовки только изображения
-    function drawImage(imgUrl) {
-        let img = new Image();
-        img.src = imgUrl;
-        img.onload = function() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(img, 0, 0, img.width, img.height);
-            drawPolygons();
-        }
+    let img = new Image();
+    console.log(imagesArr[numImg].Image);
+    img.src = "/media/" + imagesArr[numImg].Image;
+    img.onload = function() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, 0, 0, img.width, img.height);
+        drawPolygons();
     }
 }
 
 
 function refreshNumberImg () {
     var textNumberImg = document.getElementById("imageNumberText");
-    textNumberImg.textContent = "Номер изображения: " + numImg;
+    textNumberImg.textContent = "Номер изображения: " + (numImg + 1);
 }
 
 
@@ -211,8 +199,8 @@ function delSpace(number) {
     if (row) {
         delRectDB(number);
         row.parentNode.removeChild(row);
-        colorPolArr[numImg - 1].splice(number - 1, 1);
-        rectForImage[numImg - 1].splice(number - 1, 1);
+        colorPolArr[numImg].splice(number - 1, 1);
+        rectForImage[numImg].splice(number - 1, 1);
         refreshTable();
         drawImageAndPolygons(numImg);
     }
@@ -222,7 +210,7 @@ function delSpace(number) {
 function delRectDB(number) {
     let data = {
         "numPolygon": number,
-        "numImg": numImg
+        "numImg": imagesArr[numImg].id
     }
 
     fetch('/segmentation/test/del_polygon/', {
@@ -234,7 +222,7 @@ function delRectDB(number) {
     })
     .then(response => {
         if (response.ok) {
-            const s = `Полигон номер ${rectForImage[numImg - 1].length + 1} в изображении ${numImg} успешно удалён из базы данных`;
+            const s = `Полигон номер ${rectForImage[numImg].length + 1} в изображении ${numImg} успешно удалён из базы данных`;
             console.log(s);
         } else {
             console.error('Ошибка при сохранении данных в базу данных');
@@ -252,9 +240,9 @@ function refreshTable() {
         table.deleteRow(0);
     }
 
-    for (let i = 0; i < colorPolArr[numImg - 1].length; i++) {
-        var colorBox = `rgb(${dictTags[colorPolArr[numImg - 1][i]][0]}, ${dictTags[colorPolArr[numImg - 1][i]][1]}, ${dictTags[colorPolArr[numImg - 1][i]][2]})`;
-        addTableRow(i + 1, colorPolArr[numImg - 1][i], colorBox)
+    for (let i = 0; i < colorPolArr[numImg].length; i++) {
+        var colorBox = `rgb(${dictTags[colorPolArr[numImg][i]][0]}, ${dictTags[colorPolArr[numImg][i]][1]}, ${dictTags[colorPolArr[numImg][i]][2]})`;
+        addTableRow(i + 1, colorPolArr[numImg][i], colorBox)
     }
 }
 
@@ -262,9 +250,10 @@ function refreshTable() {
 function saveRectToDB() {
     let data = {
         "polygon": tempArr.slice(),
-        "numPolygon": rectForImage[numImg - 1].length + 1,
-        "numImg": numImg,
-        "tag": tempTag
+        "numPolygon": rectForImage[numImg].length + 1,
+        "numImg": imagesArr[numImg].id,
+        "tag": tempTag,
+        "projectId": projectId
     }
 
     fetch('/segmentation/test/save_polygon/', {
@@ -276,7 +265,7 @@ function saveRectToDB() {
     })
     .then(response => {
         if (response.ok) {
-            const s = `Полигон номер ${rectForImage[numImg - 1].length + 1} в изображении ${numImg} успешно сохранены в базу данных`;
+            const s = `Полигон номер ${rectForImage[numImg].length + 1} в изображении ${numImg} успешно сохранены в базу данных`;
             console.log(s);
         } else {
             console.error('Ошибка при сохранении данных в базу данных');

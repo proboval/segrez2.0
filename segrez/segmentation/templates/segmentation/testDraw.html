@@ -127,17 +127,19 @@
             </select>
         </div>
     </form>
-    <button id="saveButton" class="saveButton" style="position: absolute; bottom: 20px; right: 20px;">Сохранить</button>
+    <button id="saveButton" class="saveButton" onclick="endSegmentation()" style="position: absolute; bottom: 20px; right: 20px;">Закончить разметку</button>
     <canvas id="myCanvas" width="500" height="500"></canvas>
     <div id="imageNumberText" style="position: absolute; bottom: 40px; left: 20px; font-family: Arial;">Номер изображения: 1</div>
     <script>
         window.addEventListener('load', () => {
             {% autoescape off %}
             rectForImage = {{ rectForImage }};
-            colorPolArr = {{ colorPolArr }}
+            colorPolArr = {{ colorPolArr }};
+            imagesArr = {{ images }};
+            projectId = {{ projectId }}
             {% endautoescape %}
             refreshTable();
-            drawImageAndPolygons(1);
+            drawImageAndPolygons(0);
             changeOption();
 
         });
@@ -150,6 +152,11 @@
         {% for tag in tags %}
             dictTags['{{ tag.Name }}'] = [{{ tag.Red }}, {{ tag.Green }}, {{ tag.Blue }}]
         {% endfor %}
+
+        function endSegmentation(){
+            var url = "{% url 'segmentation:project_show' %}";
+            window.location.href = url;
+        }
     </script>
     <script src="{% static 'polimg.js' %}"></script>
 </body>

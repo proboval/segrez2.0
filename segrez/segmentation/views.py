@@ -8,11 +8,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from users.models import *
+from django.template.loader import render_to_string
 
 
 def index(request):
     tags = Tags.objects.all()
     return render(request, 'segmentation/index.html', {'tags': tags, 'title': 'Список тегов'})
+
 
 @csrf_exempt
 def project_show(request):
@@ -30,37 +32,39 @@ def project_show(request):
 
 
 def test(request):
-    tags = Tags.objects.all()
-    images = segmentImage.objects.all()
-    rects = Rect.objects.all()
-    polygons = []
-    colorPol = []
-    for i in range(len(images)):
-        polygons.append([])
-        colorPol.append([])
+    projectId = request.GET.get('projectId')
+    if projectId:
+        project = Project.objects.get(pk=projectId)
+        _tags = project.tags.all()
+        _images = project.images.all()
+        polygons = []
+        colorPol = []
+        for i in range(len(_images)):
+            polygons.append([])
+            colorPol.append([])
 
-    for i in range(len(images)):
-        for rect in Rect.objects.all().filter(inImage=i+1):
-            tempArr = []
-            colorPol[i].append(rect.tag.Name)
-            for p in rect.points.all():
-                tempArr.append([p.x, p.y])
-            polygons[i].append(tempArr)
+        i = 0
+        for image in _images:
+            print(image)
+            for rect in Rect.objects.all().filter(inImage=image):
+                print(rect)
+                tempArr = []
+                colorPol[i].append(rect.tag.Name)
+                for p in rect.points.all():
+                    tempArr.append([p.x, p.y])
+                polygons[i].append(tempArr)
+            i += 1
 
-    return render(request,
-                  'segmentation/testDraw.html',
-                  {'tags': tags, 'images': images, 'title': 'Test Draw', 'rectForImage': polygons,
-                   'colorPolArr': colorPol})
-
-
-def get_image_name(request):
-    num_img = request.GET.get('numImg')  # Получаем значение numImg из GET-параметров
-    image = segmentImage.objects.get(pk=num_img)
-
-    if image:
-        return JsonResponse({'image_name': image.Name, 'image_url': image.Image.url})
+        _images = list(_images.values())
+        context = {'tags': _tags, 'images': _images, 'title': 'Test Draw', 'rectForImage': polygons,
+                   'colorPolArr': colorPol, 'projectId': projectId}
+        return render(request, 'segmentation/testDraw.html', context=context)
     else:
-        return JsonResponse({'error': 'Image not found'})
+        return JsonResponse({'error': 'Метод запроса должен быть POST'})
+
+
+def renderDraw(request, data):
+    return render(request, 'segmentation/testDraw.html', context=data)
 
 
 def get_tag(request):
@@ -105,8 +109,11 @@ def save_polygon(request):
         numPolygon = data.get('numPolygon')
         numImg = data.get('numImg')
         tag = data.get('tag')
+        projectId = data.get('projectId')
 
-        idTag = Tags.objects.get(Name=tag)
+        project = Project.objects.get(pk=projectId)
+
+        idTag = Tags.objects.get(Name=tag, project=project)
         image = segmentImage.objects.get(pk=numImg)
 
         newPol = Rect(tag=idTag, inImage=image, idInImage=numPolygon)
@@ -151,11 +158,13 @@ def del_polygon(request):
 
         with transaction.atomic():
             image = segmentImage.objects.get(pk=numImg)
+            print(image.pk)
+            print(Rect.objects.filter(inImage=image, idInImage=numPolygon))
             rect = Rect.objects.filter(inImage=image, idInImage=numPolygon).delete()
 
             Rect.objects.filter(inImage=image, idInImage__gt=numPolygon).update(idInImage=models.F('idInImage') - 1)
 
-        return JsonResponse({'message': 'Данные успешно сохранены'})
+        return JsonResponse({'message': 'Данные успешно удалены'})
     else:
         return JsonResponse({'error': 'Метод запроса должен быть POST'})
 
@@ -213,6 +222,7 @@ class color:
 
 def upload_show(request):
     return render(request, 'segmentation/upload.html')
+
 
 @csrf_exempt
 def upload_project(request):

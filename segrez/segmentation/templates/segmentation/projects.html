@@ -84,7 +84,6 @@
     </style>
 </head>
 <body>
-    {% csrf_token %}
     <button class="logout-button" onclick="logout()">Выход</button>
     {% if user_type == "Эксперт" %}
         {% if user.company == None %}
@@ -97,6 +96,7 @@
 
     <div class="projects-container">
         {% for project in projects %}
+            {% csrf_token %}
             <div class="project-box" onclick="openProject('{{ project.id }}')">
                 <div class="project-name">{{ project.Name }}</div>
                 <div class="project-info">Количество изображений: {{ project.images.count }}</div>
@@ -116,11 +116,33 @@
         {% endif %}
     </div>
 
-    {% csrf_token %}
     <script>
     function openProject(projectId) {
-        var url = "/segmentation/projects/" + projectId + "/";
-        window.location.href = url;
+        var csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+        var data = {
+            "projectId": projectId
+        };
+        var url = `/segmentation/test/?projectId=${projectId}`;
+        fetch(`/segmentation/test/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Зарос прошёл успешно');
+                window.location.href = url;
+            } else {
+                console.error('Ошибка при выполнении запроса:', response.statusText);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            // Обработка ошибки, если не удалось отправить запрос на сервер
+        });
     }
     function logout() {
         var url = "{% url 'users:logout_user' %}";
