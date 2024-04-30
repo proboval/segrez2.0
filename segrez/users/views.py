@@ -57,4 +57,6 @@ def registration_view(request):
         expert_form = RegistrationExpertForm()
         company_form = RegistrationCompanyForm()
 
-    return render(request, 'users/registration.html', {'expert_form': expert_form, 'company_form': company_form})
+    return render(request, 'users/registration.html', {'expert_form': expert_form,
+                                                       'company_form': company_form})
+

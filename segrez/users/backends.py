@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 
 class CustomAuthBackend(BaseBackend):
-    def authenticate(self, request, email=None, password=None):
+    def authenticate(self, request, email=None, password=None): # поменять try на if, чтобы ускорить код
         try:
             user = Expert.objects.get(email=email)
         except Expert.DoesNotExist:
@@ -28,4 +28,7 @@ class CustomAuthBackend(BaseBackend):
             try:
                 return Company.objects.get(pk=user_id)
             except Company.DoesNotExist:
-                return None
+                try:
+                    return User.objects.get(pk=user_id)
+                except User.DoesNotExist:
+                    return None

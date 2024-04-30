@@ -247,4 +247,3 @@ def upload_project(request):
 
     print(reverse('segmentation:project_show'))
     return redirect(reverse('segmentation:project_show'))
-
