@@ -1,14 +1,11 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.views.generic.edit import FormView
-from .forms import FileFieldForm
 from .models import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from users.models import *
-from django.template.loader import render_to_string
 
 
 def index(request):

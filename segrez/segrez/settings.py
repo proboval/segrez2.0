@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os.path
 from pathlib import Path
-from secret_key import SECRET_KEY, password
+from secret_key import SECRET_KEY, password, password_SMTP
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -157,4 +157,19 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-LOGIN_URL = 'users/login/'
+LOGIN_URL = 'users:login'
+LOGOUT_REDIRECT_URL = "users:login"
+
+# SMTP yandex
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+
+EMAIL_HOST_USER = 'SegRez@yandex.ru'
+EMAIL_HOST_PASSWORD = password_SMTP
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
+EMAIL_ADMIN = EMAIL_HOST_USER

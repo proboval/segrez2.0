@@ -16,6 +16,7 @@ class CompanyManager(BaseUserManager):
 class Company(AbstractBaseUser):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
+    secretcode = models.CharField(max_length=4, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -45,6 +46,7 @@ class Expert(AbstractBaseUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True)
+    secretcode = models.CharField(max_length=4, null=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

@@ -3,8 +3,8 @@ from django.urls import reverse, resolve
 from users.views import logout_user, registration_view, login_view
 from segmentation.views import project_show
 
-class TestUserUrls(SimpleTestCase):
 
+class TestUserUrls(SimpleTestCase):
     def test_logout_url_is_resolved(self):
         url = reverse('users:logout_user')
         self.assertEqual(resolve(url).func, logout_user)
