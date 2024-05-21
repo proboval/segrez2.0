@@ -3,7 +3,7 @@
 {% load custom_filters %}
 <html>
 <head>
-    <title>Upload Images</title>
+    <title>Change project {{ project }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -145,25 +145,65 @@
             padding: 8px;
         }
 
-    input[type="text"], input[type="color"] {
-        width: calc(100% - 16px); /* Вычтите padding и border из ширины */
-        padding: 0px;
-        border: none; /* Убираем рамку у input[type="color"] */
-    }
+        input[type="text"], input[type="color"] {
+            width: calc(100% - 16px); /* Вычтите padding и border из ширины */
+            padding: 0px;
+            border: none; /* Убираем рамку у input[type="color"] */
+        }
 
-    input[type="text"] {
-        text-align: center; /* Выравниваем текст по центру */
-    }
+        input[type="text"] {
+            text-align: center; /* Выравниваем текст по центру */
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
+        .image-container img {
+            max-width: 100px;
+            max-height: 100px;
+            display: block;
+            cursor: pointer;
+        }
+        .delete-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .fullscreen-overlay img {
+            max-width: 90%;
+            max-height: 90%;
+        }
     </style>
 
 </head>
 <body>
     <div class="container">
         <div class="form-container" style="align-items: center; text-align: center;">
-            <h3 style="text-align: center;">Создание проекта</h3>
+            <h3 style="text-align: center;">Редактирование проекта</h3>
             <div class="form-group" style="align-items: center; text-align: center;">
                 <label for="projectName">Название проекта:</label>
-                <input type="text" id="projectName" placeholder="Введите название проекта">
+                <input type="text" id="projectName" value="{{ project.Name }}" placeholder="Введите название проекта">
             </div>
             <div class="button-container">
                 <button class="next" onclick="showExpertForm()">Назад</button>
@@ -174,6 +214,25 @@
             <h3 style="text-align: center;">Загрузка изображений</h3>
             <label for="fileInput" style="text-align: center;">Выберите изображения для загрузки</label>
             <input type="file" id="fileInput" style="margin-left: auto; margin-right: auto;" multiple>
+
+            {% if project.images.exists %}
+                <div class="uploaded-images">
+                    <h4>Загруженные изображения:</h4>
+                    <div style="display: flex; justify-content: center; flex-wrap: wrap;" >
+                        {% for image in project.images.all %}
+                            <div class="image-container" id="image-container-{{ image.id }}">
+                                <img src="{{ image.Image.url }}" alt="{{ image.Name }}" onclick="toggleFullscreen('{{ image.Image.url }}')">
+                                <button class="delete-button" onclick="deleteImageFromDb('{{ image.id }}')">x</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="fullscreen-overlay" id="fullscreenOverlay" onclick="toggleFullscreen()">
+                <img id="fullscreenImage" src="" alt="Fullscreen Image">
+            </div>
+
             <div class="button-container">
                 <button class="next" onclick="showProjectForm()">Назад</button>
                 <button class="next" onclick="showTagsForm()">Далее</button>
@@ -190,7 +249,19 @@
                     </tr>
                 </thead>
                 <tbody id="tabelTagBody">
-
+                    {% for tag in project.tags.all %}
+                        <tr id="Tag{{ tag.pk }}">
+                            <td style="text-align: center;">
+                                <input type="text" id="Tag{{ tag.pk }}Name" value="{{ tag.Name }}">
+                            </td>
+                            <td style="text-align: center;">
+                                <input type="color" id="Tag{{ tag.pk }}Color" value="#{{ tag.Red|to_hex }}{{ tag.Green|to_hex }}{{ tag.Blue|to_hex }}">
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="cursor: pointer; margin-right: 5px; color: red;" onclick="deleteTagFromDb({{ tag.pk }})">❌</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
             <div class="add-tag-form">
@@ -200,7 +271,6 @@
                     <input type="color" id="tagColor" value="#000000" style="margin-bottom: 10px;">
                     <div class="button-container">
                         <button class="next" onclick="saveNewTag(event)">Добавить тег</button>
-
                     </div>
                 </form>
             </div>
@@ -234,6 +304,9 @@
                         <h4>Эксперты проекта</h4>
                         <select id="projectExperts" multiple size="5" style="width: 100%;">
                             <!-- Здесь будут отображаться эксперты, добавленные в проект -->
+                            {% for expert in project.expert_set.all %}
+                                <option value="{{ expert.id }}">{{ expert.first_name }} {{ expert.last_name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
@@ -245,8 +318,9 @@
 
             </div>
         <div class="button-container" style="margin-bottom: 15px; ">
-                    <button class="next" onclick="uploadProject()">Создать проект</button>
-                    <button class="cancel" onclick="cancel()">Отмена</button>
+                    <button class="next" onclick="saveChangeProject()">Сохранить изменения</button>
+                    <button class="next" onclick="cancel()">Отмена</button>
+                    <button class="cancel" onclick="deleteProject({{ project.pk }})">Удалить проект</button>
                 </div>
     </div>
 
@@ -257,6 +331,144 @@
 </body>
 
 <script>
+    function saveChangeProject() {
+        var formData = new FormData();
+
+        var projectPk = {{ project.pk }};
+
+        var projectExperts = getAllExpertsFromProject();
+        var notProjectExperts = getAnotherExperts();
+
+        var images_file = document.getElementById('fileInput').files;
+        for (var i = 0; i < images_file.length; i++) {
+            formData.append('images', images_file[i]);
+        }
+
+        var nameProject = document.getElementById('projectName').value;
+        if (nameProject === '') {
+            nameProject = '{{ project.Name }}';
+        }
+
+        var images = Array.from(images_file);
+
+        var tags = [];
+        var table = document.getElementById('tabelTagBody');
+
+        for (var i = 0; i < table.rows.length; i++) {
+            // Получаем ячейки в текущей строке
+            var cells = table.rows[i].cells;
+
+            // Получаем значения названия и цвета тега из ячеек
+            var tagName = cells[0].querySelector('input[type="text"]').value;
+            var tagColor = cells[1].querySelector('input[type="color"]').value;
+
+            if (tagName.trim() === '' || tagColor.trim() === '') {
+                alert('Заполните все формы');
+                return;
+            }
+
+            // Создаем объект с информацией о теге и добавляем его в массив тегов
+            var tag = {
+                name: tagName,
+                color: tagColor
+            };
+
+            tags.push(tag);
+        }
+
+        formData.append('nameProject', nameProject);
+        var tagsString = JSON.stringify(tags)
+        formData.append('tags', tagsString);
+        formData.append('projectPk', projectPk);
+        formData.append('projectExperts', projectExperts);
+        for (var p of formData) {
+            console.log(p);
+        }
+        fetch('/segmentation/changeProject/project/', {
+            method: 'POST',
+            mode: 'same-origin',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log("Всё супер")
+                window.location.href = '/segmentation/projects/';
+            } else {
+                console.error('Ошибка при сохранении данных в базу данных');
+            }
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+        });
+    }
+
+
+    function deleteProject(projectPk) {
+        data = {"projectPk": projectPk};
+        fetch('/segmentation/changeProject/deleteProject/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                var url = "{% url 'segmentation:project_show' %}";
+                window.location.href = url;
+            }
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+        });
+    }
+
+    function deleteTagFromDb(tagId) {
+        var data = {"tagId": tagId};
+
+        fetch('/segmentation/changeProject/delete_tag/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                deleteTag(tagId);
+            }
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+        });
+    }
+
+
+    function deleteImageFromDb(imagePk) {
+        var data = {"imagePk": imagePk};
+
+        fetch('/segmentation/changeProject/deleteImage/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    var element = document.getElementById('image-container-' + imagePk);
+                    const s = `Изображение удалёно`;
+                    console.log(s);
+                    if (element) {
+                        element.remove();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Произошла ошибка:', error);
+            });
+    }
+
     // Функция для перемещения экспертов между списками
     function moveExpert(fromId, toId) {
         var fromSelect = document.getElementById(fromId);
@@ -269,6 +481,32 @@
                 toSelect.appendChild(option);
                 i--; // Уменьшаем счетчик, чтобы не пропустить следующий элемент
             }
+        }
+    }
+    function getAllExpertsFromProject() {
+        var projectExpertsSelect = document.getElementById('projectExperts');
+        var allExperts = [];
+
+        // Перебираем все опции списка "Эксперты проекта"
+        for (var i = 0; i < projectExpertsSelect.options.length; i++) {
+            var option = projectExpertsSelect.options[i];
+
+            // Получаем значение (id) каждой опции и добавляем его в массив
+            allExperts.push(option.value);
+        }
+
+        // Возвращаем массив со всеми экспертами проекта
+        return allExperts;
+    }
+
+    function toggleFullscreen(imageUrl = null) {
+        const overlay = document.getElementById('fullscreenOverlay');
+        const fullscreenImage = document.getElementById('fullscreenImage');
+        if (overlay.style.display === 'flex') {
+            overlay.style.display = 'none';
+        } else {
+            fullscreenImage.src = imageUrl;
+            overlay.style.display = 'flex';
         }
     }
 </script>

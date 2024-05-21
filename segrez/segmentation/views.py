@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from users.models import *
+from django.contrib import messages
 
 
 def index(request):
@@ -16,13 +17,14 @@ def index(request):
 @csrf_exempt
 def project_show(request):
     try:
+        projects = request.user.projects.all()
         company = request.user.company
         user_type = 'Эксперт'
     except AttributeError:
         user_type = 'Компания'
         company = request.user
+        projects = Project.objects.filter(company=company)
 
-    projects = Project.objects.filter(company=company)
     context = {'user': request.user, 'projects': projects, 'user_type': user_type}
 
     return render(request, 'segmentation/projects.html', context=context)
@@ -30,6 +32,7 @@ def project_show(request):
 
 def test(request):
     projectId = request.GET.get('projectId')
+    print(projectId)
     if projectId:
         project = Project.objects.get(pk=projectId)
         _tags = project.tags.all()
@@ -170,7 +173,7 @@ def del_polygon(request):
 def delete_tag(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        idTag = data.get('id')
+        idTag = data.get('tagId')
 
         with transaction.atomic():
             tag = Tags.objects.get(pk=idTag).delete()
@@ -218,7 +221,9 @@ class color:
 
 
 def upload_show(request):
-    return render(request, 'segmentation/upload.html')
+    experts = request.user.experts.all()
+    print(experts)
+    return render(request, 'segmentation/upload.html', {'experts': experts, 'change': False})
 
 
 @csrf_exempt
@@ -226,12 +231,19 @@ def upload_project(request):
     if request.method == 'POST':
         images = request.FILES.getlist('images')
         name_project = request.POST.get('nameProject')
+        projectExperts = request.POST.get('projectExperts')
+        projectExperts = list(projectExperts.split(','))
 
         tags = request.POST.get('tags')
         tags = json.loads(tags)
 
         newProject = Project(Name=name_project, company=request.user)
         newProject.save()
+
+        for expertPk in projectExperts:
+            expert = Expert.objects.get(pk=expertPk)
+            expert.projects.add(newProject)
+            expert.save()
 
         for image in images:
             newImage = segmentImage(Name=image.name, Image=image, project=newProject)
@@ -242,5 +254,88 @@ def upload_project(request):
             newTag = Tags(Name=tag['name'], Red=_color.red, Green=_color.green, Blue=_color.blue, project=newProject)
             newTag.save()
 
+        messages.success(request, f'Проект {newProject.Name} успешно добавлен!')
+
     print(reverse('segmentation:project_show'))
     return redirect(reverse('segmentation:project_show'))
+
+
+@csrf_exempt
+def changeProject(request):
+    projectIdGET = request.GET.get('projectId')
+    project = Project.objects.get(pk=projectIdGET)
+    companyExp = request.user.experts
+    experts = []
+    for expert in companyExp.all():
+        if not (project.expert_set.filter(pk=expert.pk).exists()):
+            experts.append(expert)
+
+    context = {'project': project, 'experts': experts}
+    return render(request, 'segmentation/changeProject.html', context=context)
+
+
+@csrf_exempt
+def deleteImage(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        imagePk = data.get('imagePk')
+        image = segmentImage.objects.get(pk=imagePk)
+        image.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=400)
+
+
+@csrf_exempt
+def deleteProject(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        projectPk = data.get('projectPk')
+        project = Project.objects.get(pk=projectPk)
+        project.delete()
+        print(projectPk)
+
+    return redirect(reverse('segmentation:project_show'))
+
+
+@csrf_exempt
+def changeProjectData(request):
+    if request.method == 'POST':
+        images = request.FILES.getlist('images')
+        name_project = request.POST.get('nameProject')
+        projectExperts = request.POST.get('projectExperts')
+        projectPk = request.POST.get('projectPk')
+        projectExperts = list(projectExperts.split(','))
+
+        tags = request.POST.get('tags')
+        tags = json.loads(tags)
+
+        project = Project.objects.get(pk=projectPk)
+
+        project.Name = name_project
+        project.save()
+
+        projectTags = project.tags.all()
+
+        for tag in projectTags:
+            tag.delete()
+
+        for tag in tags:
+            _color = color(tag['color'])
+            newTag = Tags(Name=tag['name'], Red=_color.red, Green=_color.green, Blue=_color.blue, project=project)
+            newTag.save()
+
+        for image in images:
+            newImage = segmentImage(Name=image.name, Image=image, project=project)
+            newImage.save()
+
+        for expert in project.expert_set.all():
+            if expert.pk not in projectExperts:
+                expert.projects.remove(project)
+            else:
+                projectExperts.remove(expert.pk)
+
+        for expertPk in projectExperts:
+            expert = Expert.objects.get(pk=expertPk)
+            expert.projects.add(project)
+
+        return redirect(reverse('segmentation:project_show'))

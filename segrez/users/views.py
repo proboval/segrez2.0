@@ -1,14 +1,13 @@
+import json
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
-
-from .forms import RegistrationExpertForm, RegistrationCompanyForm, LoginUserForm, checkEmailForm
+from .forms import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from .models import *
-from django.contrib.auth.decorators import user_passes_test
 from django.urls import reverse
-from django.contrib import admin
 from django.contrib.auth import logout
 from django.db import transaction
 
@@ -116,3 +115,52 @@ def cancelRegistration(request):
         return JsonResponse({'message': 'Данные успешно удалены'})
     else:
         return JsonResponse({'error': 'Ошибка'})
+
+
+def addUser(request):
+    if request.method == 'POST':
+        form = addUserForm(request.POST)
+        if form.is_valid():
+            expert_pk = request.POST.get('pk')
+            expert = None
+            if Expert.objects.filter(pk=expert_pk).exists():
+                expert = Expert.objects.get(pk=expert_pk)
+            if expert:
+                if expert.company is None:
+                    expert.company = request.user
+                    expert.save()
+
+                    subject = 'Приглашение в компанию'
+                    message = (f'Здравствуйте, {expert.last_name} {expert.first_name}!\n'
+                               f'Вас только что добавили в компанию {request.user}.\n')
+                    send_mail(subject=subject, message=message, from_email='SegRez@yandex.ru',
+                              recipient_list=[expert.email],
+                              fail_silently=False)
+
+                    messages.success(request, f'{expert} успешно добавлен в компанию')
+                else:
+                    messages.error(request, f'{expert} уже состоит в компании')
+                return redirect(reverse('segmentation:project_show'))
+            else:
+                messages.error(request, 'Пользователя с данным ключом не существует')
+
+    return render(request, 'users/addUser.html', {'form': addUserForm()})
+
+
+@csrf_exempt
+def removeExpertFromCompany(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        print(data)
+        expertId = int(data.get('expertId'))
+        expert = Expert.objects.get(pk=expertId)
+        subject = 'Удаление из компании'
+        message = (f'Здравствуйте, {expert.last_name} {expert.first_name}!\n'
+                   f'Вас только что удалили из компании {request.user}.\n'
+                   f'Для уточнения причин обратитесь по почте {request.user.email}.')
+        send_mail(subject=subject, message=message, from_email='SegRez@yandex.ru', recipient_list=[expert.email],
+                  fail_silently=False)
+        expert.company = None
+        expert.save()
+    print('переход')
+    return redirect(reverse('segmentation:project_show'))

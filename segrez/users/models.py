@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
+from segmentation.models import Project
 
 
 class CompanyManager(BaseUserManager):
@@ -45,8 +46,9 @@ class Expert(AbstractBaseUser):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True)
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, related_name='experts')
     secretcode = models.CharField(max_length=4, null=True)
+    projects = models.ManyToManyField(Project)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -57,4 +59,4 @@ class Expert(AbstractBaseUser):
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
+        return f'{self.first_name} {self.last_name} ({self.pk})'

@@ -10,4 +10,6 @@ urlpatterns = [
     path('segmentation/', include('segmentation.urls')),
     path('checkCode/', checkCode_view, name='checkCode'),
     path('checkCode/cancel/', cancelRegistration, name='cancelRegistration'),
+    path('addUser/', addUser, name='addUser'),
+    path('removeExpertFromCompany/', removeExpertFromCompany, name='removeExpertFromCompany')
 ]

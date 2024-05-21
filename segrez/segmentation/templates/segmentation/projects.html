@@ -14,13 +14,13 @@
 
         /* Стили для блока проекта */
         .project-box {
-            width: 30%; /* Ширина блока проекта */
+            width: 300px; /* Ширина блока проекта */
             height: 200px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
             border-radius: 10px;
             padding: 10px;
-            margin-bottom: 20px;
+            margin: 20px;
             font-family: Arial, sans-serif; /* Шрифт */
             text-align: center; /* Выравнивание текста по центру */
             transition: transform 0.2s; /* Анимация при наведении */
@@ -46,7 +46,7 @@
 
         /* Стили для блока компании */
         .company-block {
-            width: 30%; /* Ширина блока компании */
+            width: 300px; /* Ширина блока компании */
             height: 200px;
             background-color: lightblue;
             border-radius: 10px;
@@ -54,7 +54,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            margin-bottom: 20px;
+            margin: 20px;
             transition: transform 0.2s; /* Анимация при наведении */
             cursor: pointer;
         }
@@ -82,6 +82,22 @@
         .plus {
             font-size: 48px;
         }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
@@ -102,71 +118,136 @@
         {% endfor %}
 
     {% endif %}
-
-    <button class="logout-button" onclick="logout()">Выход</button>
-    {% if user_type == "Эксперт" %}
-        {% if user.company == None %}
-            <h3>Ваша учётная запись не состоит ни в какой компании</h3>
-        {% endif %}
-        {% if projects.count == 0 %}
-            <h3>У вас пока что нет проектов</h3>
-        {% endif %}
-    {% endif %}
-
-    <div class="projects-container">
-        {% for project in projects %}
-            {% csrf_token %}
-            <div class="project-box" onclick="openProject('{{ project.id }}')">
-                <div class="project-name">{{ project.Name }}</div>
-                <div class="project-info">Количество изображений: {{ project.images.count }}</div>
-                <div class="project-info">Количество тегов: {{ project.tags.count }}</div>
-            </div>
-        {% endfor %}
+    <div style="display: flex; justify-content: space-between;">
+        <button class="logout-button" onclick="logout()">Выход</button>
+        <div>{{ user }}</div>
         {% if user_type == "Компания" %}
-            <div class="company-block" onclick="handleClick()">
-                <div class="plus">+</div>
-            </div>
-            <script>
-            function handleClick() {
-                var url = "/segmentation/upload/";
-                window.location.href = url;
-            }
-            </script>
+            <button class="logout-button" onclick="addUser()" style="background-color: green;">Добавить эксперта в компанию</button>
         {% endif %}
+    </div>
+    {% if user_type == "Эксперт" and projects.count != 0 and user.company %}
+        <h4>Компания: {{ user.company }}</h4>
+    {% endif %}
+    <div class="projects-container" style="background-color: lightgrey; padding: 20px;">
+        {% if user_type == "Компания" %}
+            <div class="field">
+                <h4>Эксперты компании:</h4>
+                <table>
+                    <tbody>
+                        {% for expert in user.experts.all %}
+                            <tr>
+                                <td>{{ expert }}</td>
+                                <td>
+                                    <span style="cursor: pointer; margin-right: 5px; color: red;" onclick="removeExpertFromCompany({{ expert.pk }})">❌</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        {% if user_type == "Эксперт" %}
+            {% if user.company == None %}
+                <h3>Ваша учётная запись не состоит ни в какой компании</h3>
+            {% endif %}
+            {% if projects.count == 0 and user.company != None %}
+                <h3>У вас пока что нет проектов</h3>
+            {% endif %}
+        {% endif %}
+
+        <div class="projects-container">
+            {% for project in projects %}
+                {% csrf_token %}
+                {% if user_type == "Эксперт" %}
+                <div class="project-box" onclick="openProject('{{ project.id }}')">
+                {% elif user_type == "Компания" %}
+                <div class="project-box" onclick="changeProject('{{ project.id }}')">
+                {% endif %}
+                    <div class="project-name">{{ project.Name }}</div>
+                    <div class="project-info">Количество изображений: {{ project.images.count }}</div>
+                    <div class="project-info">Количество тегов: {{ project.tags.count }}</div>
+                </div>
+            {% endfor %}
+            {% if user_type == "Компания" %}
+                <div class="company-block" onclick="handleClick()">
+                    <div class="plus">+</div>
+                </div>
+                <script>
+                function handleClick() {
+                    var url = "/segmentation/upload/";
+                    window.location.href = url;
+                }
+                </script>
+            {% endif %}
+        </div>
     </div>
 
     <script>
-    function openProject(projectId) {
-        var csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-        var data = {
-            "projectId": projectId
-        };
-        var url = `/segmentation/tests/?projectId=${projectId}`;
-        fetch(`/segmentation/tests/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (response.ok) {
-                console.log('Зарос прошёл успешно');
-                window.location.href = url;
-            } else {
-                console.error('Ошибка при выполнении запроса:', response.statusText);
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-            // Обработка ошибки, если не удалось отправить запрос на сервер
-        });
-    }
-    function logout() {
-        var url = "{% url 'users:logout_user' %}";
-        window.location.href = url;
-    }
+        function addUser() {
+            var url = "{% url 'users:addUser' %}";
+            window.location.href = url;
+        }
+
+        function changeProject(projectId) {
+            var url = `/segmentation/changeProject/?projectId=${projectId}`;
+            window.location.href = url;
+        }
+
+        function removeExpertFromCompany(expertId) {
+            let data = {"expertId": expertId};
+            fetch('/users/removeExpertFromCompany/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    const s = `Эксперт удалён`;
+                    console.log(s);
+                    var url = "{% url 'segmentation:project_show' %}";
+                    window.location.href = url;
+                }
+            })
+            .catch(error => {
+                console.error('Произошла ошибка:', error);
+            });
+        }
+
+        function openProject(projectId) {
+            var csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            var data = {
+                "projectId": projectId
+            };
+            var url = `/segmentation/tests/?projectId=${projectId}`;
+            fetch(`/segmentation/tests/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Зарос прошёл успешно');
+                    window.location.href = url;
+                } else {
+                    console.error('Ошибка при выполнении запроса:', response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                // Обработка ошибки, если не удалось отправить запрос на сервер
+            });
+        }
+
+
+        function logout() {
+            var url = "{% url 'users:logout_user' %}";
+            window.location.href = url;
+        }
     </script>
 </body>
 </html>

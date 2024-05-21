@@ -2,10 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>SegRez</title>
 </head>
 <body>
-    {% block content %}
+    <div id="header">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>{{ user }}</p>
+                </div>
+                <div class="col-md-6 text-right">
+                    <a href="{% url 'users:logout_user' %}">Выход</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
+<div id="content">
+    {% block content %}
     {% endblock %}
+</div>
+
 </body>
 </html>

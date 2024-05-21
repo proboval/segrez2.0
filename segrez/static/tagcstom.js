@@ -64,8 +64,41 @@ function newRowInTable(id, name, color) {
 }
 
 
+function getAllExpertsFromProject() {
+    var projectExpertsSelect = document.getElementById('projectExperts');
+    var allExperts = [];
+
+    // Перебираем все опции списка "Эксперты проекта"
+    for (var i = 0; i < projectExpertsSelect.options.length; i++) {
+        var option = projectExpertsSelect.options[i];
+
+        // Получаем значение (id) каждой опции и добавляем его в массив
+        allExperts.push(option.value);
+    }
+
+    // Возвращаем массив со всеми экспертами проекта
+    return allExperts;
+}
+
+
+function getAnotherExperts() {
+    var expertsNotInProject = document.getElementById('allExperts');
+    var experts = [];
+
+    for (var i = 0; i < expertsNotInProject.options.length; i++) {
+        var option = expertsNotInProject.options[i];
+        experts.push(option.value);
+    }
+
+    // Возвращаем массив со всеми экспертами проекта
+    return experts;
+}
+
+
 function uploadProject() {
     var formData = new FormData();
+
+    var projectExperts = getAllExpertsFromProject();
 
     var images_file = document.getElementById('fileInput').files;
     for (var i = 0; i < images_file.length; i++) {
@@ -111,7 +144,7 @@ function uploadProject() {
     formData.append('nameProject', nameProject);
     var tagsString = JSON.stringify(tags)
     formData.append('tags', tagsString);
-
+    formData.append('projectExperts', projectExperts)
     for (var p of formData) {
         console.log(p);
     }
@@ -161,18 +194,24 @@ function getCookie(name) {
 
 
 function showUploadForm() {
-    $('.container').find('.form-container, .tags').hide(); // Скрываем все формы
+    $('.container').find('.form-container, .tags, .experts-form').hide(); // Скрываем все формы
     $('.container').find('.upload-form').show(); // Показываем форму для загрузки изображений
 }
 
 
 function showTagsForm() {
-    $('.container').find('.form-container, .upload-form').hide(); // Скрываем все формы
+    $('.container').find('.form-container, .upload-form, .experts-form').hide(); // Скрываем все формы
     $('.container').find('.tags').show(); // Показываем форму для загрузки тегов
 }
 
 
 function showProjectForm() {
-    $('.container').find('.upload-form, .tags').hide(); // Скрываем все формы
+    $('.container').find('.upload-form, .tags, .experts-form').hide(); // Скрываем все формы
     $('.container').find('.form-container').show(); // Показываем форму для названия проекта
 }
+
+function showExpertForm() {
+    $('.container').find('.upload-form, .tags, .form-container').hide(); // Скрываем все формы
+    $('.container').find('.experts-form').show(); // Показываем форму для названия проекта
+}
+

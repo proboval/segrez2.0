@@ -7,6 +7,10 @@ from .models import Company, Expert
 from django.core.mail import send_mail
 
 
+class addUserForm(forms.Form):
+    pk = forms.CharField(label='ID эксперта', widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+
 class checkEmailForm(forms.Form):
     code = forms.CharField(label='Код', widget=forms.TextInput(attrs={'class': 'form-control'}))
 
