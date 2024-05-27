@@ -86,6 +86,9 @@ class Rect(models.Model):
                                 )
     idInImage = models.IntegerField()
 
+    def __str__(self):
+        return f'{self.idInImage}) {self.tag}'
+
 
 class Point(models.Model):
     x = models.FloatField()

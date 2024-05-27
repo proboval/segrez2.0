@@ -20,4 +20,5 @@ urlpatterns = [
     path('changeProject/deleteImage/', deleteImage, name='deleteImage'),
     path('changeProject/deleteProject/', deleteProject, name='deleteProject'),
     path('changeProject/project/', changeProjectData, name='changeProjectData'),
+    path('changeProject/download/', downloadData, name='downloadData'),
 ]

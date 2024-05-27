@@ -317,12 +317,13 @@
             </div>
 
             </div>
-        <div class="button-container" style="margin-bottom: 15px; ">
+                <div class="button-container" style="margin-bottom: 15px; ">
                     <button class="next" onclick="saveChangeProject()">Сохранить изменения</button>
                     <button class="next" onclick="cancel()">Отмена</button>
+                    <button class="next" onclick="downloadData()">Выгрузка данных о разметке</button>
                     <button class="cancel" onclick="deleteProject({{ project.pk }})">Удалить проект</button>
                 </div>
-    </div>
+            </div>
 
     {% csrf_token %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -331,6 +332,38 @@
 </body>
 
 <script>
+    function downloadData() {
+        var data = {'projectPk': {{ project.pk }}};
+
+        fetch('/segmentation/changeProject/download/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();  // Получение данных в виде Blob
+            } else {
+                throw new Error('Сервер вернул ошибку');
+            }
+        })
+        .then(blob => {
+            // Создание ссылки для скачивания
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'SegRez.zip';
+            document.body.appendChild(a); // Требуется для Firefox
+            a.click();
+            a.remove();  // Удаление ссылки после скачивания
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+        });
+    }
+
     function saveChangeProject() {
         var formData = new FormData();
 

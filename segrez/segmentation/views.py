@@ -1,12 +1,16 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from .models import *
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 import json
 from users.models import *
 from django.contrib import messages
+import io
+import zipfile
+from PIL import Image, ImageDraw
+import os
 
 
 def index(request):
@@ -17,8 +21,8 @@ def index(request):
 @csrf_exempt
 def project_show(request):
     try:
+        first_name = request.user.first_name
         projects = request.user.projects.all()
-        company = request.user.company
         user_type = 'Эксперт'
     except AttributeError:
         user_type = 'Компания'
@@ -312,7 +316,7 @@ def changeProjectData(request):
         project = Project.objects.get(pk=projectPk)
 
         project.Name = name_project
-        project.save()
+        project.save_base()
 
         projectTags = project.tags.all()
 
@@ -339,3 +343,106 @@ def changeProjectData(request):
             expert.projects.add(project)
 
         return redirect(reverse('segmentation:project_show'))
+
+
+# добавить масшт и фикс размер
+# добавить сохранение тегов в json
+@csrf_exempt
+def downloadData(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            projectPk = data.get('projectPk')
+            project = Project.objects.get(pk=projectPk)
+
+            images = project.images.all()
+            rects = []
+            points = []
+            for image in images:
+                rects.append(list(image.rects.all()))
+
+                tempPoints = []
+                for rect in rects[-1]:
+                    tempPoints.append(list(rect.points.all()))
+                points.append(tempPoints)
+
+            data = {}
+
+            i = 0
+            for image in images:
+                data[image.Name] = {}
+                for j in range(len(rects[i])):
+                    rect_key = f'{rects[i][j].idInImage}'
+                    data[image.Name][rect_key] = {}
+                    data[image.Name][rect_key][rects[i][j].tag.Name] = {'Red': rects[i][j].tag.Red,
+                                                                        'Green': rects[i][j].tag.Green,
+                                                                        'Blue': rects[i][j].tag.Blue}
+                    for k in range(len(points[i][j])):
+                        point = points[i][j][k]
+                        data[image.Name][rect_key][k + 1] = {'x': point.x, 'y': point.y}
+                i += 1
+
+            json_data = json.dumps(data, indent=4, ensure_ascii=False).encode('utf8')
+
+            buffer = io.BytesIO()
+
+            print(rects)
+
+            for i in range(len(rects)):
+                rects[i].sort(key=lambda rect: sqGause(rect) * (-1))
+
+            print(rects)
+            for i in range(len(rects)):
+                for j in range(len(rects[i])):
+                    print(f'{rects[i][j]}, {sqGause(rects[i][j])}', end='; ')
+                print()
+
+            with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                zip_file.writestr(f'{project}.json', json_data)
+
+                i = 0
+                for image in images:
+                    img = Image.new("RGB", (image.Image.width, image.Image.height), color=(0, 0, 0))
+                    draw = ImageDraw.Draw(img)
+                    for j in range(len(rects[i])):
+                        xy = list()
+                        for point in rects[i][j].points.all():
+                            xy.append((point.x, point.y))
+                        draw.polygon(xy, fill=(rects[i][j].tag.Red, rects[i][j].tag.Green, rects[i][j].tag.Blue),
+                                     outline=(rects[i][j].tag.Red, rects[i][j].tag.Green, rects[i][j].tag.Blue))
+
+                    img_buffer = io.BytesIO()
+                    img.save(img_buffer, format='PNG')
+                    img_buffer.seek(0)
+                    zip_file.writestr(f'masks/{image.Name}.png', img_buffer.read())
+                    i += 1
+
+            buffer.seek(0)
+            response = HttpResponse(buffer, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=data.zip'
+
+            messages.success(request, 'Маски успешно сгенерированы, ожидайте загрузку')
+
+            return response
+        except Exception as e:
+            print(str(e))
+            return HttpResponse(f"Ошибка: {str(e)}", status=500)
+
+    return HttpResponse("Метод не поддерживается", status=405)
+
+
+def sqGause(rect: Rect):
+    points = []
+    for point in rect.points.all():
+        points.append(point)
+
+    sq = 0
+    for i in range(1, len(points) - 1):
+        sq += points[i].x * points[i + 1].y
+        sq -= points[i + 1].x * points[i].y
+
+    sq += points[0].x * points[1].y + points[-1].x * points[0].y
+    sq -= points[1].x * points[0].y + points[0].x * points[-1].y
+
+    return abs(sq / 2)
+

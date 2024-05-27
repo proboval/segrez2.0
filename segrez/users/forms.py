@@ -88,7 +88,7 @@ class RegistrationCompanyForm(UserCreationForm):
         email = self.cleaned_data['email']
         emailExpert = Expert.objects.filter(email=email)
         emailCompany = Company.objects.filter(email=email)
-        emailUser = User.objects.filet(email=email)
+        emailUser = User.objects.filter(email=email)
         if emailExpert.count() or emailCompany.count() or emailUser.count():
             raise ValidationError("Пользователь с такой почтой уже существует")
         return email

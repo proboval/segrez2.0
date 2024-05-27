@@ -213,7 +213,7 @@ function delRectDB(number) {
         "numImg": imagesArr[numImg].id
     }
 
-    fetch('/segmentation/test/del_polygon/', {
+    fetch('/segmentation/tests/del_polygon/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -256,7 +256,7 @@ function saveRectToDB() {
         "projectId": projectId
     }
 
-    fetch('/segmentation/test/save_polygon/', {
+    fetch('/segmentation/tests/save_polygon/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
