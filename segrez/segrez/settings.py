@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os.path
 from pathlib import Path
+
+import torch
+
 from secret_key import SECRET_KEY, password, password_SMTP
+from segment_anything import SamPredictor, sam_model_registry
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -173,3 +177,12 @@ EMAIL_HOST_PASSWORD = password_SMTP
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
+
+
+MODEL_TYPE = "vit_h"
+DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+sam = sam_model_registry[MODEL_TYPE](
+    checkpoint='C:\\Users\\Saveliy\\PycharmProjects\\segrez2.0\\segrez\\sam_vit_h_4b8939.pth'
+)
+sam.to(device=DEVICE)
+MASK_PREDICTOR = SamPredictor(sam)

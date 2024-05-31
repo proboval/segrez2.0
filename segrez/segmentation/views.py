@@ -10,7 +10,9 @@ from django.contrib import messages
 import io
 import zipfile
 from PIL import Image, ImageDraw
-import os
+import cv2
+import numpy as np
+from segment_anything import SamPredictor
 
 
 def index(request):
@@ -35,6 +37,7 @@ def project_show(request):
 
 
 def test(request):
+    request.session['image'] = -1
     projectId = request.GET.get('projectId')
     print(projectId)
     if projectId:
@@ -421,8 +424,6 @@ def downloadData(request):
             response = HttpResponse(buffer, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=data.zip'
 
-            messages.success(request, 'Маски успешно сгенерированы, ожидайте загрузку')
-
             return response
         except Exception as e:
             print(str(e))
@@ -445,4 +446,5 @@ def sqGause(rect: Rect):
     sq -= points[1].x * points[0].y + points[0].x * points[-1].y
 
     return abs(sq / 2)
+
 

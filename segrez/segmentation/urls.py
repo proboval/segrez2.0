@@ -1,10 +1,11 @@
-from django.urls import path
+from django.urls import path, include
 from .views import *
 
 
 app_name = 'segmentation'
 
 urlpatterns = [
+    path('autosegmentation/', include('autosegmentation.urls')),
     path('', index, name='segmentation.index'),
     path('tests/', test, name='testDraw'),
     path('upload/project/', upload_project, name='upload_project'),

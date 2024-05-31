@@ -50,6 +50,7 @@ window.addEventListener('keydown', function(event) {
     /*вызов отрисовки многоугольника*/
     if (event.key === 'Enter' || event.keyCode === 13) {
         if (tempArr.length > 2){
+            const canvas = document.getElementById('myCanvas');
             console.log('Print Enter');
             saveRectToDB();
             rectForImage[numImg].push(tempArr.slice());
@@ -65,6 +66,10 @@ window.addEventListener('keydown', function(event) {
     if (event.keyCode === 39) {
         if (numImg + 1 < totalObj) {
             numImg += 1;
+            var image_ = new Image();
+            image_.src = "/media/" + imagesArr[numImg].Image;
+            canvas.width = image_.width;
+            canvas.height = image_.height;
             drawImageAndPolygons(numImg);
             refreshTable();
             tempArr = [];
@@ -75,10 +80,62 @@ window.addEventListener('keydown', function(event) {
     if (event.keyCode === 37) {
         if (numImg + 1 > 1) {
             numImg -= 1;
+            var image_ = new Image();
+            image_.src = "/media/" + imagesArr[numImg].Image;
+            canvas.width = image_.width;
+            canvas.height = image_.height;
             drawImageAndPolygons(numImg);
             refreshTable();
             tempArr = [];
             refreshNumberImg();
+        }
+    }
+    if (event.keyCode == 65) {
+        if (tempArr.length <= 2 && tempArr.length > 0) {
+            data = {
+                'imagePk': imagesArr[numImg]['id'],
+                'points': tempArr.slice()
+            }
+
+            fetch('/segmentation/autosegmentation/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json(); // Извлечение данных из JSON-ответа
+                } else {
+                throw new Error('Ошибка сети');
+                }
+            })
+            .then(data => {
+                // Обработка данных, полученных от сервера
+                var { x_min, y_min, x_max, y_max, contour } = data;
+                tempArr = []
+                tempArr.push([x_min, y_min]);
+                tempArr.push([x_max, y_min]);
+                tempArr.push([x_max, y_max]);
+                tempArr.push([x_min, y_max]);
+
+                saveRectToDB();
+                rectForImage[numImg].push(tempArr.slice());
+                drawR(rectForImage[numImg][k]);
+
+                k += 1;
+
+                colorPolArr[numImg].push(tempTag);
+                addTableRow(k, tempTag, context.strokeStyle);
+
+                tempArr = contour;
+                drawR(contour);
+                tempArr = [];
+            })
+            .catch(error => {
+                console.error('Произошла ошибка:', error);
+            });
         }
     }
     console.log(numImg);
