@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from .models import *
 from django.http import JsonResponse, HttpResponse
@@ -13,6 +13,9 @@ from PIL import Image, ImageDraw
 import cv2
 import numpy as np
 from segment_anything import SamPredictor
+import pydicom
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 def index(request):
@@ -233,6 +236,20 @@ def upload_show(request):
     return render(request, 'segmentation/upload.html', {'experts': experts, 'change': False})
 
 
+def dicom2png(dicom_file):
+    dicom_data = pydicom.dcmread(dicom_file)
+    pixel_array = dicom_data.pixel_array
+
+    # Normalize pixel array to range 0-255
+    pixel_array = ((pixel_array - np.min(pixel_array)) / (np.max(pixel_array) - np.min(pixel_array)) * 255).astype(np.uint8)
+
+    image = Image.fromarray(pixel_array)
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    buffered.seek(0)
+    return buffered
+
+
 @csrf_exempt
 def upload_project(request):
     if request.method == 'POST':
@@ -253,7 +270,18 @@ def upload_project(request):
             expert.save()
 
         for image in images:
-            newImage = segmentImage(Name=image.name, Image=image, project=newProject)
+            if image.name.lower().endswith('.dcm'):
+                print(image)
+                imageName = image.name.replace('.dcm', '.png')
+                img_buffer = dicom2png(image)
+
+                img_file = InMemoryUploadedFile(img_buffer, None, imageName, 'image/png', img_buffer.getbuffer().nbytes,
+                                                None)
+
+                newImage = segmentImage(Name=imageName, Image=img_file, project=newProject)
+            else:
+                newImage = segmentImage(Name=image.name, Image=image, project=newProject)
+
             newImage.save()
 
         for tag in tags:
@@ -318,21 +346,39 @@ def changeProjectData(request):
 
         project = Project.objects.get(pk=projectPk)
 
-        project.Name = name_project
-        project.save_base()
-
         projectTags = project.tags.all()
 
-        for tag in projectTags:
-            tag.delete()
+        project.Name = name_project
+        project.save_base()
+        print(tags)
 
         for tag in tags:
-            _color = color(tag['color'])
-            newTag = Tags(Name=tag['name'], Red=_color.red, Green=_color.green, Blue=_color.blue, project=project)
-            newTag.save()
+            if not tag['id']:
+                _color = color(tag['color'])
+                newTag = Tags(Name=tag['name'], Red=_color.red, Green=_color.green, Blue=_color.blue, project=project)
+                newTag.save()
+            else:
+                _tag = projectTags.get(pk=tag['id'])
+                _tag.Name = tag['name']
+                _color = color(tag['color'])
+                _tag.Red = _color.red
+                _tag.Green = _color.green
+                _tag.Blue = _color.blue
+                _tag.save()
 
         for image in images:
-            newImage = segmentImage(Name=image.name, Image=image, project=project)
+            if image.name.lower().endswith('.dcm'):
+                print(image)
+                imageName = image.name.replace('.dcm', '.png')
+                img_buffer = dicom2png(image)
+
+                img_file = InMemoryUploadedFile(img_buffer, None, imageName, 'image/png', img_buffer.getbuffer().nbytes,
+                                                None)
+
+                newImage = segmentImage(Name=imageName, Image=img_file, project=project)
+            else:
+                newImage = segmentImage(Name=image.name, Image=image, project=project)
+
             newImage.save()
 
         for expert in project.expert_set.all():
@@ -346,6 +392,34 @@ def changeProjectData(request):
             expert.projects.add(project)
 
         return redirect(reverse('segmentation:project_show'))
+
+
+@csrf_exempt
+def exportTags(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        tags = data.get('tags')
+        project_pk = data.get('projectPk')
+
+        project = get_object_or_404(Project, pk=project_pk)
+
+        jsonData = {}
+        for tag in tags:
+            jsonData[tag['name']] = tag['color']
+
+        json_data = json.dumps(jsonData, indent=4, ensure_ascii=False).encode('utf8')
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr('tags.json', json_data)
+
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename=data.zip'
+
+        return response
+
+    return JsonResponse({'message': 'Запрос должен быть POST'})
 
 
 # добавить масшт и фикс размер

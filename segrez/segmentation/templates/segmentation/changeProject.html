@@ -273,6 +273,11 @@
                         <button class="next" onclick="saveNewTag(event)">Добавить тег</button>
                     </div>
                 </form>
+                <div class="button-container">
+                    <button class="next" onclick="exportTags()">Экспортировать теги</button>
+                    <button class="next" onclick="importTags()">Импортировать теги</button>
+                    <input accept=".json" onchange="handleFileSelect(event)" type="file" id="jsonFileInput" hidden>
+                </div>
             </div>
             <div class="button-container">
                 <button class="next" onclick="showUploadForm()">Назад</button>
@@ -332,6 +337,90 @@
 </body>
 
 <script>
+    function exportTags() {
+        var tags = [];
+        var table = document.getElementById('tabelTagBody');
+
+        for (var i = 0; i < table.rows.length; i++) {
+            // Получаем ячейки в текущей строке
+            var cells = table.rows[i].cells;
+
+            // Получаем значения названия и цвета тега из ячеек
+            var tagName = cells[0].querySelector('input[type="text"]').value;
+            var tagColor = cells[1].querySelector('input[type="color"]').value;
+
+            if (tagName.trim() === '' || tagColor.trim() === '') {
+                alert('Заполните все формы');
+                return;
+            }
+
+            // Создаем объект с информацией о теге и добавляем его в массив тегов
+            var tag = {
+                name: tagName,
+                color: tagColor
+            };
+
+            tags.push(tag);
+        }
+
+        var data = {'tags': tags, 'projectPk': {{ project.pk }}};
+
+        fetch('/segmentation/changeProject/exportTags/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.blob();  // Получение данных в виде Blob
+            } else {
+                throw new Error('Сервер вернул ошибку');
+            }
+        })
+        .then(blob => {
+            // Создание ссылки для скачивания
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'Tags.zip';
+            document.body.appendChild(a); // Требуется для Firefox
+            a.click();
+            a.remove();  // Удаление ссылки после скачивания
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+        });
+    }
+
+
+    function importTags() {
+        document.getElementById('jsonFileInput').click();
+    }
+
+    function handleFileSelect(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var tags = JSON.parse(e.target.result);
+                    var id = 1;
+                    for (var key in tags) {
+                        var value = tags[key];
+                        newRowInTable(id, key, value);
+                        id += 1;
+                    }
+                } catch (error) {
+                    console.error("Ошибка при парсинге JSON файла:", error);
+                    alert("Ошибка при парсинге JSON файла. Проверьте формат файла.");
+                }
+            };
+            reader.readAsText(file);
+        }
+    }
+
     function downloadData() {
         var data = {'projectPk': {{ project.pk }}};
 
@@ -394,14 +483,24 @@
             // Получаем значения названия и цвета тега из ячеек
             var tagName = cells[0].querySelector('input[type="text"]').value;
             var tagColor = cells[1].querySelector('input[type="color"]').value;
+            var deleteButton = cells[2].querySelector('span[onclick]');
 
             if (tagName.trim() === '' || tagColor.trim() === '') {
                 alert('Заполните все формы');
                 return;
             }
 
+            var deleteFunction = deleteButton.getAttribute('onclick');
+            var tagId = null;
+            if (deleteFunction && deleteFunction.includes('deleteTagFromDb')) {
+                var match = deleteFunction.match(/\d+/); // Извлекаем ID тега из строки
+                tagId = match ? parseInt(match[0], 10) : null;
+            }
+
+
             // Создаем объект с информацией о теге и добавляем его в массив тегов
             var tag = {
+                id: tagId,
                 name: tagName,
                 color: tagColor
             };
