@@ -164,6 +164,8 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = 'users:login'
 LOGOUT_REDIRECT_URL = "users:login"
 
+DATA_UPLOAD_MAX_NUMBER_FILES = 120
+
 # SMTP yandex
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

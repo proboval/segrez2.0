@@ -1,0 +1,23 @@
+asgiref==3.7.2
+certifi==2023.7.22
+charset-normalizer==3.3.2
+coverage==7.5.2
+Django==5.0.1
+django-debug-toolbar==4.3.0
+django-extensions==3.2.3
+django-schema-graph==3.1.0
+graphviz==0.20.3
+matplotlib==3.8.2
+numpy==1.26.1
+opencv-python==4.9.0.80
+opencv-python-headless==4.8.0.74
+Pillow==10.1.0
+pydicom==2.4.4
+requests==2.31.0
+requests-toolbelt==1.0.0
+requirements-detector==1.2.2
+scipy==1.13.1
+seaborn==0.13.2
+segment_anything @ git+https://github.com/facebookresearch/segment-anything.git@6fdee8f2727f4506cfbbe553e23b895e27956588
+torch==2.3.0
+torchvision==0.18.0

@@ -12,6 +12,7 @@ let rectForImage = new Array(n);
 var colorPolArr = new Array(n);
 var imagesArr = new Array(n);
 let flag = 0;
+let scale = 1.0;
 
 const tagsCont = document.getElementById("tagsSelect");
 var colorArr = new Array(3);
@@ -120,17 +121,17 @@ window.addEventListener('keydown', function(event) {
                 tempArr.push([x_max, y_max]);
                 tempArr.push([x_min, y_max]);
 
-                saveRectToDB();
-                rectForImage[numImg].push(tempArr.slice());
-                drawR(rectForImage[numImg][k]);
+                drawR(tempArr);
 
                 k += 1;
 
                 colorPolArr[numImg].push(tempTag);
-                addTableRow(k, tempTag, context.strokeStyle);
 
                 tempArr = contour;
                 drawR(contour);
+                rectForImage[numImg].push(tempArr.slice());
+                saveRectToDB();
+                addTableRow(k, tempTag, context.strokeStyle);
                 tempArr = [];
             })
             .catch(error => {
@@ -159,6 +160,12 @@ function drawImageAndPolygons(numImg) {
     img.src = "/media/" + imagesArr[numImg].Image;
     img.onload = function() {
         context.clearRect(0, 0, canvas.width, canvas.height);
+
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        context.save();
+        context.scale(scale, scale);
         context.drawImage(img, 0, 0, img.width, img.height);
         drawPolygons();
     }
@@ -174,12 +181,12 @@ function refreshNumberImg () {
 /*отрисовка многоугольника*/
 function drawR(matrix) {
     context.beginPath();
-
     context.moveTo(matrix[0][0], matrix[0][1]);
     for (let i = 1; i < matrix.length; i++) {
         context.lineTo(matrix[i][0], matrix[i][1]);
     }
     context.lineTo(matrix[0][0], matrix[0][1]);
+    context.closePath();
     context.stroke();
 }
 

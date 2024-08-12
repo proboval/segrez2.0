@@ -203,6 +203,10 @@
 
                     </div>
                 </form>
+                <div class="button-container">
+                    <button class="next" onclick="importTags()">Импортировать теги</button>
+                    <input accept=".json" onchange="handleFileSelect(event)" type="file" id="jsonFileInput" hidden>
+                </div>
             </div>
             <div class="button-container">
                 <button class="next" onclick="showUploadForm()">Назад</button>
@@ -269,6 +273,32 @@
                 toSelect.appendChild(option);
                 i--; // Уменьшаем счетчик, чтобы не пропустить следующий элемент
             }
+        }
+    }
+
+    function importTags() {
+        document.getElementById('jsonFileInput').click();
+    }
+
+    function handleFileSelect(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var tags = JSON.parse(e.target.result);
+                    var id = 1;
+                    for (var key in tags) {
+                        var value = tags[key];
+                        newRowInTable(id, key, value);
+                        id += 1;
+                    }
+                } catch (error) {
+                    console.error("Ошибка при парсинге JSON файла:", error);
+                    alert("Ошибка при парсинге JSON файла. Проверьте формат файла.");
+                }
+            };
+            reader.readAsText(file);
         }
     }
 </script>
